@@ -19,6 +19,10 @@ map("n", "<Leader>bp", ":bprevious<CR>", { desc = "Previous buffer" })
 -- 窗口管理 (SPC w)
 map("n", "<Leader>ww", "<C-w>w", { desc = "Cycle windows" })
 map("n", "<Leader>wd", "<C-w>c", { desc = "Delete window" })
+map("n", "<Leader>wD", "<C-w>o", { desc = "Delete other windows" })  -- 新添加的映射
+map("n", "<Leader>wj", "<Plug>(choosewin)", { desc = "Jump to window" })  -- 新添加的映射
+
+
 map("n", "<Leader>w-", "<C-w>s", { desc = "Split below" })
 map("n", "<Leader>w|", "<C-w>v", { desc = "Split right" })
 
@@ -34,6 +38,13 @@ map("n", "<Leader>jd", vim.lsp.buf.declaration, { desc = "Jump to declaration" }
 map("n", "<Leader>ji", vim.lsp.buf.implementation, { desc = "Jump to implementation" })
 map("n", "<Leader>jt", vim.lsp.buf.type_definition, { desc = "Jump to type definition" })
 map("n", "<Leader>jb", "<C-o>", { desc = "Jump back" })
+
+
+map("n", "<Leader>ss", function() vim.cmd("Telescope live_grep") end, { desc = "Project search" })
+map("n", "<Leader>sb", function() vim.cmd("Telescope current_buffer_fuzzy_find") end, { desc = "Buffer search" })
+
+
+
 
 -- 其他功能
 map("n", "<Leader>/", ":nohlsearch<CR>", { desc = "Clear highlights" }) -- 清除搜索高亮
@@ -201,7 +212,7 @@ vim.opt.statusline:prepend("%{coc#status()}%{get(b:,'coc_current_function','')}"
 ---@diagnostic disable-next-line: redefined-local
 local opts = {silent = true, nowait = true}
 -- Show all diagnostics
-keyset("n", "<space>a", ":<C-u>CocList diagnostics<cr>", opts)
+--keyset("n", "<space>a", ":<C-u>CocList diagnostics<cr>", opts)
 -- Manage extensions
 keyset("n", "<space>e", ":<C-u>CocList extensions<cr>", opts)
 -- Show commands
@@ -209,7 +220,7 @@ keyset("n", "<space>c", ":<C-u>CocList commands<cr>", opts)
 -- Find symbol of current document
 keyset("n", "<space>o", ":<C-u>CocList outline<cr>", opts)
 -- Search workspace symbols
-keyset("n", "<space>s", ":<C-u>CocList -I symbols<cr>", opts)
+keyset("n", "<space>cs", ":<C-u>CocList -I symbols<cr>", opts)
 -- Do default action for next item
 keyset("n", "<space>j", ":<C-u>CocNext<cr>", opts)
 -- Do default action for previous item

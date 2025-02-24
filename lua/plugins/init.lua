@@ -26,14 +26,53 @@ lazy.setup({
       })
     end,
   },
+  { 'wakatime/vim-wakatime', lazy = false },
+  {
+    'stevearc/aerial.nvim',
+    opts = {},
 
+    -- Optional dependencies
+    dependencies = {
+       "nvim-treesitter/nvim-treesitter",
+       "nvim-tree/nvim-web-devicons"
+    },
+    config = function()
+      require('aerial').setup({
+        -- 设置布局为右侧
+        layout = {
+          default_direction = "right",
+          placement = "edge",
+          width = 30,
+        },
+        -- 在特定文件类型下自动打开
+        attach_mode = "global",
+        -- 设置文件类型
+      })
+    end,
+  },
+  {
+    "t9md/vim-choosewin",
+    config = function()
+        vim.g.choosewin_overlay_enable = 1        -- 启用覆盖模式
+        vim.g.choosewin_statusline_replace = 1    -- 替换状态栏
+        vim.g.choosewin_tabline_replace = 0       -- 不替换标签栏
+        vim.g.choosewin_color_overlay = {
+            gui = { '#88c0d0', '#434C5E' },       -- 设置覆盖颜色
+            cterm = { 'blue', 'black' }
+        }
+        vim.g.choosewin_color_overlay_current = {
+            gui = { '#88c0d0', '#434C5E' },
+            cterm = { 'blue', 'black' }
+        }
+    end,
+},
   -- 主题配置
   {
-    "folke/tokyonight.nvim",
+    "NTBBloodbath/doom-one.nvim",
     lazy = false,
     priority = 1000,
     config = function()
-      vim.cmd([[colorscheme tokyonight]])
+      vim.cmd([[colorscheme doom-one]])
     end,
   },
 
