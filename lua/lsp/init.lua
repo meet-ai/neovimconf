@@ -1,39 +1,81 @@
-local lspconfig = require("lspconfig")
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
--- 设置 LSP 日志级别
-vim.lsp.set_log_level("debug")
+-- 设置 LSP 日志级别（静默模式）
+vim.lsp.set_log_level("error")
 
--- 打印 LSP 客户端信息
-local function on_attach(client, bufnr)
-  print("LSP attached to buffer " .. bufnr)
-  print("Client name: " .. client.name)
-  print("Client capabilities: " .. vim.inspect(client.server_capabilities))
-  
-  -- 设置自动命令来显示诊断信息
-  vim.api.nvim_create_autocmd("CursorHold", {
-    buffer = bufnr,
-    callback = function()
-      local diagnostics = vim.diagnostic.get(bufnr)
-      if #diagnostics > 0 then
-        --print("Diagnostics for buffer " .. bufnr .. ": " .. vim.inspect(diagnostics))
-      end
-    end,
-  })
-end
+-- LSP 客户端附加回调（使用 Neovim 0.11 推荐的 LspAttach 事件）
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    local bufnr = args.buf
+    if not client then
+      return
+    end
 
--- 检查 LSP 服务器是否可用
-local function check_server_availability(server)
-  local cmd = server.cmd[1]
-  print("Checking server availability for: " .. cmd)
+    -- 在附加的 buffer 上设置 LSP 键位，避免被 GUI 全局快捷键拦截（如 g 被 Go 菜单占用）
+    local function buf_map(mode, lhs, rhs, opts)
+      vim.keymap.set(mode, lhs, rhs, vim.tbl_extend("keep", opts or {}, { buffer = bufnr }))
+    end
+    buf_map("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
+    buf_map("n", "gr", vim.lsp.buf.references, { desc = "Find references" })
+    buf_map("n", "gi", vim.lsp.buf.implementation, { desc = "Go to implementation" })
+    buf_map("n", "K", vim.lsp.buf.hover, { desc = "Hover" })
+    -- GUI 下若 "g" 被应用占用，可用 Ctrl+] 跳定义
+    if vim.fn.has("gui_running") == 1 then
+      buf_map("n", "<C-]>", vim.lsp.buf.definition, { desc = "Go to definition (GUI fallback)" })
+    end
+
+    -- 设置自动命令来显示诊断信息（静默）
+    vim.api.nvim_create_autocmd("CursorHold", {
+      buffer = bufnr,
+      callback = function()
+        local diagnostics = vim.diagnostic.get(bufnr)
+        if #diagnostics > 0 then
+          -- 静默模式：不打印
+        end
+      end,
+    })
+
+    -- 按语言启用保存时格式化
+    local ft = vim.bo[bufnr].filetype
+    if ft == "go" then
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        buffer = bufnr,
+        callback = function()
+          vim.lsp.buf.format({ async = false })
+        end,
+      })
+    elseif ft == "java" or ft == "kotlin" then
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        buffer = bufnr,
+        callback = function()
+          vim.lsp.buf.format({ async = false })
+        end,
+      })
+    elseif ft == "scala" or ft == "sbt" then
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        buffer = bufnr,
+        callback = function()
+          vim.lsp.buf.format({ async = false })
+        end,
+      })
+    end
+  end,
+})
+
+-- 检查 LSP 服务器是否可用（静默模式）
+local function check_server_availability(cmd_list)
+  if not cmd_list or not cmd_list[1] then
+    return false
+  end
+  local cmd = cmd_list[1]
   local handle = io.popen("which " .. cmd)
   local result = handle:read("*a")
   handle:close()
-  print("Server " .. cmd .. " found: " .. tostring(result ~= ""))
   return result ~= ""
 end
 
--- 设置 LSP 服务器
+-- 使用 vim.lsp.config (Neovim 0.11+) 配置 LSP 服务器，替代已废弃的 require('lspconfig')
 local servers = {
   {
     name = "gopls",
@@ -41,18 +83,7 @@ local servers = {
       capabilities = capabilities,
       cmd = { "gopls", "serve" },
       filetypes = { "go", "gomod", "gowork", "gotmpl" },
-      root_dir = lspconfig.util.root_pattern("go.mod", ".git"),
-      on_attach = function(client, bufnr)
-        print("gopls on_attach called")
-        on_attach(client, bufnr)
-        -- 启用文档格式化
-        vim.api.nvim_create_autocmd("BufWritePre", {
-          pattern = "*.go",
-          callback = function()
-            vim.lsp.buf.format({ async = false })
-          end,
-        })
-      end,
+      root_markers = { "go.mod", ".git" },
       settings = {
         gopls = {
           analyses = {
@@ -82,7 +113,7 @@ local servers = {
         usePlaceholders = true,
         completeUnimported = true,
       },
-    }
+    },
   },
   {
     name = "jdtls",
@@ -90,25 +121,14 @@ local servers = {
       capabilities = capabilities,
       cmd = { "jdtls" },
       filetypes = { "java", "kotlin" },
-      root_dir = lspconfig.util.root_pattern(
+      root_markers = {
         "pom.xml",
         "gradle.build",
         "gradle.build.kts",
         "build.gradle",
         "build.gradle.kts",
-        ".git"
-      ),
-      on_attach = function(client, bufnr)
-        print("jdtls on_attach called")
-        on_attach(client, bufnr)
-        -- 启用文档格式化
-        vim.api.nvim_create_autocmd("BufWritePre", {
-          pattern = { "*.java", "*.kt", "*.kts" },
-          callback = function()
-            vim.lsp.buf.format({ async = false })
-          end,
-        })
-      end,
+        ".git",
+      },
       settings = {
         java = {
           signatureHelp = { enabled = true },
@@ -165,35 +185,51 @@ local servers = {
           },
         },
       },
-    }
+    },
   },
-  -- 其他服务器配置...
+  {
+    name = "metals",
+    config = {
+      capabilities = capabilities,
+      cmd = { "metals" },
+      filetypes = { "scala", "sbt" },
+      root_markers = {
+        "build.sbt",
+        "build.sc",
+        "build.scala",
+        "build.mill",
+        ".mill-version",
+        "mill-version",
+        "project/build.properties",
+        ".git",
+      },
+      settings = {
+        metals = {
+          enable = true,
+          serverVersion = "latest.release",
+          showImplicitArguments = true,
+          showInferredType = true,
+          superMethodLensesEnabled = true,
+        },
+      },
+    },
+  },
 }
 
--- 启动 LSP 服务器
-print("Starting LSP servers...")
+-- 启动 LSP 服务器（使用 vim.lsp.config + vim.lsp.enable）
 for _, server in ipairs(servers) do
-  print("Processing server: " .. server.name)
-  if check_server_availability(server.config) then
-    print("Setting up LSP server: " .. server.name)
+  if check_server_availability(server.config.cmd) then
     local success, err = pcall(function()
-      lspconfig[server.name].setup(server.config)
+      vim.lsp.config(server.name, server.config)
+      vim.lsp.enable(server.name)
     end)
     if not success then
-      print("Error setting up " .. server.name .. ": " .. tostring(err))
-    else
-      print("Successfully set up " .. server.name)
+      vim.notify("Error setting up " .. server.name .. ": " .. tostring(err), vim.log.levels.ERROR)
     end
-  else
-    print("Warning: LSP server " .. server.name .. " not found in PATH")
   end
 end
 
--- 设置 LSP 快捷键
-vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
-vim.keymap.set("n", "gr", vim.lsp.buf.references, { desc = "Find references" })
-vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { desc = "Go to implementation" })
-vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Show documentation" })
+-- 设置 LSP 快捷键（gd/gr/gi/K 已在 LspAttach 中按 buffer 设置，此处只保留全局用到的）
 vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "Rename symbol" })
 vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "Code actions" })
 vim.keymap.set("n", "<leader>f", vim.lsp.buf.format, { desc = "Format code" })
@@ -213,6 +249,3 @@ for type, icon in pairs(signs) do
   local hl = "DiagnosticSign" .. type
   vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
 end
-
--- 打印当前活动的 LSP 客户端
-print("Active LSP clients: " .. vim.inspect(vim.lsp.get_active_clients()))

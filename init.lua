@@ -1,19 +1,43 @@
+-- Cursor风格Neovim配置
+-- 将Neovim改造为类似Cursor编辑器的体验（无VSCode快捷键）
+
 --[[
-Author: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
-Date: 2025-04-11 19:55:01
-LastEditors: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
-LastEditTime: 2025-04-12 07:43:39
-FilePath: /nvim/init.lua
-Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
---]]
+Cursor编辑器特性包含：
+1. 现代化UI界面
+2. AI编程助手集成
+3. 智能项目管理
+4. 强大的Git集成
+5. AI增强的工作流
+]]
+
 -- bootstrap lazy.nvim
 require("core.bootstrap")
 
--- load core configurations
-require("core.options")  -- general vim options
-require("core.keymaps")  -- key mappings
-require("core.theme")    -- colorscheme and UI
+-- 加载Cursor风格核心配置
+require("core.cursor")
 
+-- 加载原始核心配置（兼容性）
+require("core.options")
+require("core.keymaps")
+require("core.theme")
 
+-- 加载插件
 require("plugins")
 
+-- 加载Cursor风格插件 (现在通过lazy.nvim导入)
+-- require("plugins.cursor")
+
+-- 启用Cursor风格主题和快捷键
+vim.schedule(function()
+  local ok, theme = pcall(require, "cursor.theme")
+  if ok then
+    theme.setup()
+  end
+  
+  local ok, keymaps = pcall(require, "cursor.keymaps")
+  if ok then
+    keymaps.setup()
+  end
+  
+  -- 静默模式：不显示欢迎信息
+end)

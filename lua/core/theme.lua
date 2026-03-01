@@ -11,4 +11,4 @@ vim.api.nvim_set_hl(0, "NormalFloat", { bg = "NONE" })
 -- vim.cmd[[colorscheme tokyonight]]
 
 -- 默认使用内置的配色方案
-vim.cmd[[colorscheme slate]]
+vim.cmd[[colorscheme desert]]
