@@ -294,7 +294,7 @@ lazy.setup({
 
   -- Opencode.nvim - opencode CLI plugin
   {
-    dir = "./opencode.nvim",
+    "nickjvandyke/opencode.nvim",
     lazy = true,
     cmd = { "Opencode", "OpencodeToggle" },
     -- 快捷键已统一放在 lua/core/keymaps.lua，便于 which-key 显示（GUI/终端一致）
