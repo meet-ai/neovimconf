@@ -294,8 +294,7 @@ lazy.setup({
 
   -- Opencode.nvim - opencode CLI plugin
   {
-    "nickjvandyke/opencode.nvim",
-    version = "*",
+    dir = "./opencode.nvim",
     lazy = true,
     cmd = { "Opencode", "OpencodeToggle" },
     -- 快捷键已统一放在 lua/core/keymaps.lua，便于 which-key 显示（GUI/终端一致）
@@ -451,7 +450,11 @@ lazy.setup({
        ---@type opencode.Opts
        -- vim.g 不能放函数、不能放混合 key 的 table，只放简单值；server/keys 稍后直接写 opts
        -- vim.g.opencode_opts 已在上面设置
-      local opencode_config = require("opencode.config")
+       local opencode_config_ok, opencode_config = pcall(require, "opencode.config")
+       if not opencode_config_ok then
+         vim.notify("Failed to load opencode.config, using default config", vim.log.levels.WARN)
+         opencode_config = { opts = {} }
+       end
         opencode_config.opts.server = {
           start = function()
             if not (opencode_server_win and vim.api.nvim_win_is_valid(opencode_server_win)) then
@@ -476,11 +479,21 @@ lazy.setup({
         ["@file"] = function(ctx)
           local path = vim.g.opencode_selected_file
           if not path or path == "" then return nil end
-          return require("opencode.context").format(path)
+           local ok, result = pcall(require("opencode.context").format, path)
+           if ok then return result else return nil end
         end,
       })
       -- 确保 opencode 模块正确初始化
-      require("opencode").setup()
+      local ok, opencode = pcall(require, "opencode")
+      if ok then
+        if opencode.setup then
+          opencode.setup()
+        else
+          vim.notify("Opencode module loaded but setup is nil", vim.log.levels.WARN)
+        end
+      else
+        vim.notify("Failed to load opencode module: " .. tostring(opencode), vim.log.levels.ERROR)
+      end
     end,
   },
 
