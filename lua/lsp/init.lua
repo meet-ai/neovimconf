@@ -69,10 +69,24 @@ local function check_server_availability(cmd_list)
     return false
   end
   local cmd = cmd_list[1]
+  -- 检查 mason 的 bin 目录
+  local mason_bin = vim.fn.stdpath("data") .. "/mason/bin"
+  local mason_cmd = mason_bin .. "/" .. cmd
   local handle = io.popen("which " .. cmd)
   local result = handle:read("*a")
   handle:close()
-  return result ~= ""
+  if result ~= "" then
+    return true
+  end
+  -- 检查 mason 目录中的可执行文件
+  local f = io.open(mason_cmd, "r")
+  if f ~= nil then
+    io.close(f)
+    -- 将 cmd 替换为 mason 路径
+    cmd_list[1] = mason_cmd
+    return true
+  end
+  return false
 end
 
 -- 使用 vim.lsp.config (Neovim 0.11+) 配置 LSP 服务器，替代已废弃的 require('lspconfig')
@@ -212,6 +226,16 @@ local servers = {
           superMethodLensesEnabled = true,
         },
       },
+    },
+  },
+  {
+    name = "marksman",
+    config = {
+      capabilities = capabilities,
+      cmd = { "marksman", "server" },
+      filetypes = { "markdown" },
+      root_markers = { ".git" },
+      single_file_support = true,
     },
   },
 }

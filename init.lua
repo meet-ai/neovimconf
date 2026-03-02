@@ -34,10 +34,10 @@ vim.schedule(function()
     theme.setup()
   end
   
-  local ok, keymaps = pcall(require, "cursor.keymaps")
-  if ok then
-    keymaps.setup()
-  end
+  -- local ok, keymaps = pcall(require, "cursor.keymaps")
+  -- if ok then
+  --   keymaps.setup()
+  -- end
   
   -- 静默模式：不显示欢迎信息
 end)

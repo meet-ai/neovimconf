@@ -119,6 +119,7 @@ return {
     end,
   },
 
+--[[
   -- 更好的诊断界面 (类似Cursor的问题面板)
   {
     "folke/trouble.nvim",
@@ -131,6 +132,7 @@ return {
       })
     end,
   },
+]]
 
   -- 浮动窗口管理 (类似Cursor的弹出窗口)
   {

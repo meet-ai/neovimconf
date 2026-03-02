@@ -50,12 +50,42 @@ local function enable_cursor_features()
   vim.opt.undofile = true
   vim.opt.undodir = os.getenv("HOME") .. "/.local/state/nvim/undo//"
   
-  -- 设置自动保存
-  vim.cmd([[autocmd TextChanged,InsertLeave * if &readonly == 0 && filereadable(bufname('%')) | silent write | endif]])
+  -- 设置自动保存（安全版本）
+  vim.api.nvim_create_autocmd({"TextChanged", "InsertLeave"}, {
+    callback = function()
+      -- 只处理非只读且有关联文件的缓冲区
+      if vim.bo.readonly then
+        return
+      end
+      
+      local bufname = vim.api.nvim_buf_get_name(0)
+      local buftype = vim.bo.buftype
+      
+      -- 跳过特殊缓冲区
+      if bufname == "" or 
+         bufname:match("^term://") or
+         buftype == "terminal" or
+         buftype == "nofile" or
+         buftype == "quickfix" or
+         buftype == "prompt" then
+        return
+      end
+      
+      -- 检查文件是否可读
+      local ok, is_readable = pcall(vim.fn.filereadable, bufname)
+      if not ok or is_readable == 0 then
+        return
+      end
+      
+      -- 静默保存（忽略所有错误）
+      pcall(vim.cmd, "silent write")
+    end,
+    pattern = "*",
+  })
   
-  -- 应用Cursor风格主题
-  vim.cmd([[colorscheme tokyonight]])
-  vim.cmd([[set background=dark]])
+   -- 应用Cursor风格主题
+  pcall(vim.cmd, [[colorscheme desert]])
+  pcall(vim.cmd, [[set background=dark]])
 end
 
 -- 只保留Neovim原生快捷键，不添加VSCode风格快捷键
@@ -86,7 +116,10 @@ local function load_cursor_config()
   end
 end
 
--- 自动加载
+-- 立即启用基本功能（不依赖VimEnter）
+enable_cursor_features()
+
+-- 自动加载（用于主题和高级快捷键）
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = load_cursor_config,
   once = true,

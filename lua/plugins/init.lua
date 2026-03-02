@@ -9,7 +9,7 @@ Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查�
 local lazy = require("lazy")
 
 -- 主题配置 - 使用内置的 desert 主题
-vim.cmd.colorscheme("default")
+vim.cmd.colorscheme("desert")
 
 lazy.setup({
   -- Mason 插件管理器
@@ -41,6 +41,7 @@ lazy.setup({
           "rust_analyzer",
           "clangd",
           "metals",
+          "marksman",  -- Markdown LSP
         },
       })
     end,
@@ -57,6 +58,26 @@ lazy.setup({
     },
     config = function()
       require("lsp.init")
+    end,
+  },
+
+  -- Navigator.lua - 智能代码导航
+  {
+    "ray-x/navigator.lua",
+    dependencies = {
+      "ray-x/guihua.lua",
+      "neovim/nvim-lspconfig",
+    },
+    config = function()
+      require("navigator").setup({
+        mason = false,
+        lsp = {
+          enable = true,
+          code_action = { enable = true },
+          code_lens_action = { enable = true },
+        },
+      })
+      vim.cmd('command! Navigator lua require("navigator.sidepanel").lsp_and_diag_panel()')
     end,
   },
 
@@ -121,6 +142,9 @@ lazy.setup({
             maxwidth = 50,
             ellipsis_char = "...",
           }),
+        },
+        experimental = {
+          ghost_text = false,
         },
       })
 
@@ -225,7 +249,26 @@ lazy.setup({
     "nvim-lualine/lualine.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
-      require("lualine").setup()
+      require("lualine").setup({
+        sections = {
+          lualine_a = {'mode'},
+          lualine_b = {'branch', 'diff', 'diagnostics'},
+          lualine_c = {'filename'},
+          lualine_x = {'encoding', 'fileformat', 'filetype'},
+          lualine_y = {'progress'},
+          lualine_z = {'location', function() return vim.g.readonly_enabled and "READONLY" or "" end}
+        },
+        inactive_sections = {
+          lualine_a = {},
+          lualine_b = {},
+          lualine_c = {'filename'},
+          lualine_x = {'location'},
+          lualine_y = {},
+          lualine_z = {}
+        },
+        tabline = {},
+        extensions = {}
+      })
     end,
   },
 
@@ -275,15 +318,43 @@ lazy.setup({
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
+    dependencies = {},
     config = function()
-      require("nvim-treesitter.configs").setup({
+       require("nvim-treesitter.configs").setup({
          ensure_installed = { "lua", "vim", "vimdoc", "javascript", "python", "scala" },
-        highlight = { enable = true },
-      })
-    end,
-  },
+         highlight = { enable = true },
+         incremental_selection = {
+           enable = true,
+           keymaps = {
+             init_selection = "gnn",
+             node_incremental = "grn",
+             scope_incremental = "grc",
+             node_decremental = "grm",
+           },
+         },
+         indent = { enable = true },
+         playground = {
+           enable = true,
+           updatetime = 25,
+           persist_queries = false,
+           keybindings = {
+             toggle_query_editor = 'o',
+             toggle_hl_groups = 'i',
+             toggle_injected_languages = 't',
+             toggle_anonymous_nodes = 'a',
+             toggle_language_display = 'I',
+             focus_language = 'f',
+             unfocus_language = 'F',
+             update = 'R',
+             goto_node = '<cr>',
+             show_help = '?',
+           },
+         },
+        })
+      end,
+    },
 
-  -- 自动补全括号
+    -- 自动补全括号
   {
     "windwp/nvim-autopairs",
     event = "InsertEnter",
@@ -518,12 +589,15 @@ lazy.setup({
         "gzip",
         "matchit",
         "matchparen",
-        "netrwPlugin",
         "tarPlugin",
         "tohtml",
         "tutor",
         "zipPlugin",
-      },
-    },
+           },
+           preview = {
+             timeout = 100,
+             treesitter = true,
+           },
+         },
   },
 })
