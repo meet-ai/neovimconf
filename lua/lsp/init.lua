@@ -1,7 +1,28 @@
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 -- 设置 LSP 日志级别（静默模式）
-vim.lsp.set_log_level("error")
+vim.lsp.set_log_level("off")
+
+-- 自定义 LSP 处理器，抑制 info 级别的日志消息
+vim.lsp.handlers["window/logMessage"] = function(err, method, params, client_id)
+  if params.type and (params.type == 1 or params.type == 2) then
+    -- 只显示 error (1) 和 warning (2)
+    vim.notify(params.message, params.type)
+  end
+  -- 否则忽略 info (3) 和 log (4) 消息
+end
+
+-- 抑制 info 级别的 showMessage 通知
+vim.lsp.handlers["window/showMessage"] = function(err, method, params, client_id)
+  if params.type and (params.type == 1 or params.type == 2) then
+    -- 只显示 error (1) 和 warning (2)
+    vim.notify(params.message, params.type)
+  end
+  -- 否则忽略 info (3) 和 log (4) 消息
+end
+
+-- 忽略进度通知
+vim.lsp.handlers["$/progress"] = function() end
 
 -- LSP 客户端附加回调（使用 Neovim 0.11 推荐的 LspAttach 事件）
 vim.api.nvim_create_autocmd("LspAttach", {
@@ -121,11 +142,13 @@ local servers = {
             parameterNames = true,
             rangeVariableTypes = true,
           },
+          verboseOutput = false,
         },
       },
       init_options = {
         usePlaceholders = true,
         completeUnimported = true,
+        trace = "off",
       },
     },
   },
@@ -188,8 +211,11 @@ local servers = {
                 name = "JavaSE-21",
                 path = "/Users/meetai/.sdkman/candidates/java/21.0.6-graal",
                 default = true,
-              },
-            },
+      },
+      init_options = {
+        trace = "off",
+      },
+    },
           },
           format = {
             settings = {
@@ -224,6 +250,7 @@ local servers = {
           showImplicitArguments = true,
           showInferredType = true,
           superMethodLensesEnabled = true,
+          trace = "off",
         },
       },
     },

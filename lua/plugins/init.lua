@@ -8,10 +8,13 @@ Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查�
 --]]
 local lazy = require("lazy")
 
--- 主题配置 - 使用内置的 desert 主题
-vim.cmd.colorscheme("desert")
+-- 主题配置 - 由 space-nvim 插件设置
+-- vim.cmd.colorscheme("space")
 
 lazy.setup({
+  -- 本地 Spacemacs 主题 (替换 space-nvim 插件)
+  -- 主题配置在 lua/themes/spacemacs/init.lua 中实现
+
   -- Mason 插件管理器
   {
     "williamboman/mason.nvim",
@@ -565,6 +568,15 @@ lazy.setup({
       else
         vim.notify("Failed to load opencode module: " .. tostring(opencode), vim.log.levels.ERROR)
       end
+    end,
+  },
+
+  -- render-markdown.nvim - 实时Markdown预览
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    event = "VeryLazy",
+    config = function()
+      require("render-markdown").setup()
     end,
   },
 

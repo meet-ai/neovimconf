@@ -6,9 +6,12 @@ vim.opt.termguicolors = true  -- 启用真彩色支持
 vim.api.nvim_set_hl(0, "Normal", { bg = "NONE" })
 vim.api.nvim_set_hl(0, "NormalFloat", { bg = "NONE" })
 
--- 如果你想使用特定的配色方案，可以在这里设置
--- 例如使用 tokyonight 主题：
--- vim.cmd[[colorscheme tokyonight]]
+-- 加载 Spacemacs 主题
+vim.o.background = "light"  -- 默认使用亮色主题
+vim.cmd('colorscheme spacemacs')
 
--- 默认使用内置的配色方案
-vim.cmd[[colorscheme desert]]
+-- 应用 cursor 主题覆盖
+local cursor_theme_ok, cursor_theme = pcall(require, "cursor.theme")
+if cursor_theme_ok and cursor_theme.setup then
+  cursor_theme.setup()
+end

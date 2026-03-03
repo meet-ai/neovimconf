@@ -112,15 +112,19 @@ local function setup_cursor_keymaps()
     end
   end, { desc = "Live grep in project" })
   
-  -- 智能代码搜索（基于语义）
-  map("n", "<Leader>fs", function()
+  -- 保存文件
+  map("n", "<Leader>fs", "<cmd>w<cr>", { desc = "Save current file" })
+  map("n", "<Leader>fS", "<cmd>wa<cr>", { desc = "Save all files" })
+  
+  -- 搜索光标下的文字（大写P）
+  map("n", "<Leader>sP", function()
     local ok, builtin = pcall(require, "telescope.builtin")
     if ok then
       builtin.grep_string()
     else
       vim.cmd("Telescope grep_string")
     end
-  end, { desc = "Find word under cursor" })
+  end, { desc = "Find word under cursor (uppercase P)" })
   
   -- ===========================================
   -- 代码智能增强（LSP + AI）

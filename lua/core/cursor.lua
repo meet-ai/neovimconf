@@ -84,8 +84,8 @@ local function enable_cursor_features()
   })
   
    -- 应用Cursor风格主题
-  pcall(vim.cmd, [[colorscheme desert]])
-  pcall(vim.cmd, [[set background=dark]])
+  pcall(vim.cmd, [[colorscheme spacemacs]])
+  pcall(vim.cmd, [[set background=light]])
 end
 
 -- 只保留Neovim原生快捷键，不添加VSCode风格快捷键

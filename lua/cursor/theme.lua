@@ -2,78 +2,85 @@
 
 local M = {}
 
--- 应用Cursor风格主题
+-- 应用Cursor风格主题覆盖
 M.setup = function()
-  -- 设置主题为 desert
-  vim.cmd([[colorscheme desert]])
-  vim.cmd([[set background=dark]])
+  -- 注意: 主主题已在 core/theme.lua 中通过 themes.spacemacs 设置
+  -- 这里只设置覆盖和自定义
   
-  -- 启用真彩色
-  vim.opt.termguicolors = true
-  
-  -- 设置透明背景（与 desert 主题兼容）
-  vim.api.nvim_set_hl(0, "Normal", { bg = "NONE" })
-  vim.api.nvim_set_hl(0, "NormalFloat", { bg = "NONE" })
+  local is_dark = vim.o.background == "dark"
   
   -- 设置侧边栏和状态栏
-  vim.api.nvim_set_hl(0, "LineNr", { fg = "#6c7086" })
-  vim.api.nvim_set_hl(0, "CursorLineNr", { fg = "#f38ba8", bold = true })
-  vim.api.nvim_set_hl(0, "SignColumn", { bg = "#1a1b26" })
-  
-  -- 设置光标和选择
-  vim.api.nvim_set_hl(0, "CursorLine", { bg = "#313244" })
-  vim.api.nvim_set_hl(0, "Visual", { bg = "#585b70" })
+  if is_dark then
+     -- UI colors use plugin defaults (Spacemacs)
+  else
+     -- Light theme
+     -- UI colors use plugin defaults (Spacemacs)
+  end
   
   -- 设置语法高亮 (类似Cursor的配色)
-  vim.api.nvim_set_hl(0, "Comment", { fg = "#6272a4", italic = true })
-  vim.api.nvim_set_hl(0, "Keyword", { fg = "#cba6f7", bold = true })
-  vim.api.nvim_set_hl(0, "Function", { fg = "#89b4fa" })
-  vim.api.nvim_set_hl(0, "String", { fg = "#a6e3a1" })
-  vim.api.nvim_set_hl(0, "Number", { fg = "#fab387" })
-  vim.api.nvim_set_hl(0, "Boolean", { fg = "#f38ba8" })
-  vim.api.nvim_set_hl(0, "Type", { fg = "#f9e2af" })
-  vim.api.nvim_set_hl(0, "Identifier", { fg = "#cba6f7" })
-  vim.api.nvim_set_hl(0, "Constant", { fg = "#fab387" })
+  if is_dark then
+    vim.api.nvim_set_hl(0, "Comment", { fg = "#2aa1ae", italic = true })
+    vim.api.nvim_set_hl(0, "Keyword", { fg = "#4f97d7", bold = true })
+    vim.api.nvim_set_hl(0, "Function", { fg = "#bc6ec5" })
+    vim.api.nvim_set_hl(0, "String", { fg = "#2d9574" })
+    vim.api.nvim_set_hl(0, "Number", { fg = "#a45bad" })
+    vim.api.nvim_set_hl(0, "Boolean", { fg = "#a45bad" })
+    vim.api.nvim_set_hl(0, "Type", { fg = "#ce537a" })
+    vim.api.nvim_set_hl(0, "Identifier", { fg = "#7590db" })
+    vim.api.nvim_set_hl(0, "Constant", { fg = "#a45bad" })
+  else
+    -- Light theme colors - brighter and more saturated
+    vim.api.nvim_set_hl(0, "Comment", { fg = "#2aa1ae", italic = true })      -- brighter teal
+    vim.api.nvim_set_hl(0, "Keyword", { fg = "#3a81c3", bold = true })        -- spacemacs keyword
+    vim.api.nvim_set_hl(0, "Function", { fg = "#6c3163" })                   -- spacemacs func
+    vim.api.nvim_set_hl(0, "String", { fg = "#2d9574" })                     -- spacemacs str
+    vim.api.nvim_set_hl(0, "Number", { fg = "#4e3163" })                     -- spacemacs const
+    vim.api.nvim_set_hl(0, "Boolean", { fg = "#4e3163" })                    -- spacemacs const
+    vim.api.nvim_set_hl(0, "Type", { fg = "#ba2f59", bold = true })          -- spacemacs type
+    vim.api.nvim_set_hl(0, "Identifier", { fg = "#715ab1" })                 -- spacemacs var
+    vim.api.nvim_set_hl(0, "Constant", { fg = "#4e3163" })                   -- spacemacs const
+  end
   
   -- 设置诊断颜色
-  vim.api.nvim_set_hl(0, "DiagnosticError", { fg = "#f38ba8" })
-  vim.api.nvim_set_hl(0, "DiagnosticWarn", { fg = "#f9e2af" })
-  vim.api.nvim_set_hl(0, "DiagnosticInfo", { fg = "#89b4fa" })
-  vim.api.nvim_set_hl(0, "DiagnosticHint", { fg = "#74c7ec" })
+  if is_dark then
+    vim.api.nvim_set_hl(0, "DiagnosticError", { fg = "#f38ba8" })
+    vim.api.nvim_set_hl(0, "DiagnosticWarn", { fg = "#f9e2af" })
+    vim.api.nvim_set_hl(0, "DiagnosticInfo", { fg = "#89b4fa" })
+    vim.api.nvim_set_hl(0, "DiagnosticHint", { fg = "#74c7ec" })
+  else
+    vim.api.nvim_set_hl(0, "DiagnosticError", { fg = "#e0446c" })  -- brighter red
+    vim.api.nvim_set_hl(0, "DiagnosticWarn", { fg = "#c9a41d" })   -- brighter yellow
+    vim.api.nvim_set_hl(0, "DiagnosticInfo", { fg = "#6ab0f5" })   -- brighter blue
+    vim.api.nvim_set_hl(0, "DiagnosticHint", { fg = "#2d8f5c" })   -- brighter green
+  end
   
   -- 设置Git颜色
-  vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#a6e3a1" })
-  vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#f9e2af" })
-  vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#f38ba8" })
+  if is_dark then
+    vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#a6e3a1" })
+    vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#f9e2af" })
+    vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#f38ba8" })
+  else
+    vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#5aaf2d" })   -- brighter green
+    vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#b59a1a" }) -- brighter yellow
+    vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#e0446c" }) -- brighter red
+  end
   
-  -- 设置浮动窗口样式
-  vim.api.nvim_set_hl(0, "Pmenu", { bg = "#1e1e2e", fg = "#cdd6f4" })
-  vim.api.nvim_set_hl(0, "PmenuSel", { bg = "#585b70", fg = "#ffffff" })
-  vim.api.nvim_set_hl(0, "PmenuSbar", { bg = "#313244" })
-  vim.api.nvim_set_hl(0, "PmenuThumb", { bg = "#6c7086" })
+
   
-  -- 设置状态栏颜色
-  vim.api.nvim_set_hl(0, "StatusLine", { 
-    bg = "#1e1e2e",
-    fg = "#cdd6f4",
-  })
-  vim.api.nvim_set_hl(0, "StatusLineNC", {
-    bg = "#181825",
-    fg = "#6c7086",
-  })
+
   
-  -- 设置标签页
-  vim.api.nvim_set_hl(0, "TabLine", { bg = "#181825", fg = "#6c7086" })
-  vim.api.nvim_set_hl(0, "TabLineSel", { bg = "#1e1e2e", fg = "#cdd6f4" })
-  vim.api.nvim_set_hl(0, "TabLineFill", { bg = "#181825" })
+
   
   -- 设置搜索高亮
-  vim.api.nvim_set_hl(0, "Search", { bg = "#fab387", fg = "#1e1e2e" })
-  vim.api.nvim_set_hl(0, "IncSearch", { bg = "#f9e2af", fg = "#1e1e2e" })
+  if is_dark then
+    vim.api.nvim_set_hl(0, "Search", { bg = "#fab387", fg = "#1e1e2e" })
+    vim.api.nvim_set_hl(0, "IncSearch", { bg = "#f9e2af", fg = "#1e1e2e" })
+  else
+    vim.api.nvim_set_hl(0, "Search", { bg = "#d87c52", fg = "#fbf8ef" })  -- brighter orange, bg0
+    vim.api.nvim_set_hl(0, "IncSearch", { bg = "#c9a41d", fg = "#fbf8ef" })  -- brighter yellow, bg0
+  end
   
-  -- 设置折叠
-  vim.api.nvim_set_hl(0, "FoldColumn", { bg = "#1a1b26", fg = "#6c7086" })
-  vim.api.nvim_set_hl(0, "Folded", { bg = "#313244", fg = "#6c7086" })
+
   
   -- 设置缩进线
   vim.opt.list = true
@@ -84,19 +91,26 @@ M.setup = function()
     extends = "❯",
     precedes = "❮",
   }
-  vim.api.nvim_set_hl(0, "Whitespace", { fg = "#6c7086" })
+  if is_dark then
+    vim.api.nvim_set_hl(0, "Whitespace", { fg = "#6c7086" })
+  else
+    vim.api.nvim_set_hl(0, "Whitespace", { fg = "#b8b4c8" })  -- brighter grey
+  end
 end
 
 -- 切换主题模式
 M.toggle_theme = function()
   local current_bg = vim.o.background
   if current_bg == "dark" then
-    vim.cmd([[set background=light]])
-    vim.cmd([[colorscheme desert]])
+    vim.cmd('set background=light')
   else
-    vim.cmd([[set background=dark]])
-    vim.cmd([[colorscheme desert]])
+    vim.cmd('set background=dark')
   end
+  
+  -- 重新加载主题
+  vim.cmd('colorscheme spacemacs')
+  
+  -- 应用覆盖
   M.setup()
 end
 
