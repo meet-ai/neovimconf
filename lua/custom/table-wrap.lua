@@ -258,33 +258,30 @@ function TableWrap:run()
         max_content_widths[i] = math.max(max_content_widths[i], col.width)
     end
     
-    -- 平均分配宽度 = 可用宽度 / 列数
-    local avg_width = math.floor(available_width / col_count)
-    
-    -- 获取配置的最小宽度
     local min_width = self.config.min_width or 0
-    min_width = math.max(min_width, 3)  -- 至少为3以显示对齐指示符
-    
-    -- 分配列宽：取内容最大宽度和平均宽度的较小值
+    min_width = math.max(min_width, 3)
+
+    -- 按列顺序：每列单独取 min(该列内容最大宽, 当前剩余均分)，扣减后对剩余列继续均分
     local col_widths = {}
+    local remaining = available_width
     for i = 1, col_count do
-        local content_width = max_content_widths[i]
-        -- 取内容宽度和平均宽度的较小值，但不小于最小宽度
-        local final_width = math.min(content_width, avg_width)
-        col_widths[i] = math.max(final_width, min_width)
+        local num_left = col_count - i + 1
+        local avg = math.floor(remaining / num_left)
+        avg = math.max(avg, min_width)
+        local cw = max_content_widths[i]
+        col_widths[i] = math.max(math.min(cw, avg), min_width)
+        remaining = remaining - col_widths[i]
     end
-    
-    -- 如果总和超过可用宽度，按比例缩减
+
+    -- 若总和仍超可用宽度（舍入导致），按比例缩
     local total_width = 0
     for i = 1, col_count do
         total_width = total_width + col_widths[i]
     end
-    
     if total_width > available_width then
         local scale = available_width / total_width
         for i = 1, col_count do
-            col_widths[i] = math.floor(col_widths[i] * scale)
-            col_widths[i] = math.max(col_widths[i], min_width)  -- 保持最小宽度
+            col_widths[i] = math.max(math.floor(col_widths[i] * scale), min_width)
         end
     end
     
