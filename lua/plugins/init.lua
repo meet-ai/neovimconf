@@ -285,17 +285,18 @@ lazy.setup({
           -- 让搜索结果显示文件路径
           path_display = { "smart" },
           -- 文件搜索时忽略的目录/模式（减少 Scala 等编译产物干扰）
-          file_ignore_patterns = {
-            "^%.git/",
-            "^node_modules/",
-            "^target/",           -- sbt / Scala 编译输出
-            "^%.bloop/",          -- Bloop
-            "^%.metals/",         -- Metals
-            "^%.bsp/",
-            "^project/target/",   -- sbt project 编译
-            "%.class$",           -- JVM 字节码
-            "%.jar$",             -- 如需也排除 jar 可保留
-          },
+            file_ignore_patterns = {
+              "^%.git/",
+              "^node_modules/",
+              "^target/",           -- sbt / Scala 编译输出
+              "^%.bloop/",          -- Bloop
+              "^%.metals/",         -- Metals
+              "^%.bsp/",
+              "^project/target/",   -- sbt project 编译
+              "%.class$",           -- JVM 字节码
+              "%.jar$",             -- 如需也排除 jar 可保留
+              "%.tasty$",           -- ScalaTest 临时文件
+            },
         },
         pickers = {
           find_files = {
@@ -310,6 +311,7 @@ lazy.setup({
               "-not", "-path", "*/.bsp/*",
               "-not", "-path", "*/node_modules/*",
               "-not", "-name", "*.class",
+              "-not", "-name", "*.tasty",
             },
           },
         },
@@ -469,8 +471,10 @@ lazy.setup({
                 silent = true,
               })
               vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<C-q>", "<C-\\><C-n><cmd>lua vim.g.opencode_close_win()<CR>", { noremap = true, silent = true })
-              -- Esc 退出终端插入模式
-              vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<Esc>", "<C-\\><C-n>", { noremap = true, silent = true })
+                -- Esc 退出终端插入模式
+                vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<Esc>", "<C-\\><C-n>", { noremap = true, silent = true })
+                -- Leader+Esc 退出终端插入模式
+                vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<Leader><Esc>", "<C-\\><C-n>", { noremap = true, silent = true })
           else
              -- 创建新缓冲区
              vim.notify("Creating new opencode buffer", vim.log.levels.INFO)
@@ -496,6 +500,8 @@ lazy.setup({
                vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<C-q>", "<C-\\><C-n><cmd>lua vim.g.opencode_close_win()<CR>", { noremap = true, silent = true })
                -- Esc 退出终端插入模式
                vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<Esc>", "<C-\\><C-n>", { noremap = true, silent = true })
+               -- Leader+Esc 退出终端插入模式
+               vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<Leader><Esc>", "<C-\\><C-n>", { noremap = true, silent = true })
                 vim.fn.termopen("opencode attach http://127.0.0.1:28080", { cwd = vim.loop.cwd() })
          end
          -- 现在打开窗口（无论是现有缓冲区还是新缓冲区）
@@ -576,7 +582,39 @@ lazy.setup({
     "MeanderingProgrammer/render-markdown.nvim",
     event = "VeryLazy",
     config = function()
-      require("render-markdown").setup()
+       require("render-markdown").setup({
+        -- 光标所在行暂时隐藏插件的渲染（overlay/conceal），显示原文，便于左右移动和编辑
+        anti_conceal = {
+          enabled = true,
+        },
+        win_options = {
+          concealcursor = { rendered = "" },
+        },
+        pipe_table = {
+          enabled = true,
+          style = "normal",
+          cell = "raw",
+          padding = 0,
+          min_width = 0,
+          border_enabled = false,
+          -- 行与行之间浅色分割线的高亮（虚拟行之间无分割线）
+          row_divider_hl = "Comment",
+        },
+         link = {
+           wiki = {
+             body = function(ctx)
+               -- 从完整路径中提取文件名
+               local path = ctx.destination or ctx.text or ""
+               local filename = path:match("([^/\\]+)$") or path
+               return filename
+             end,
+           },
+         },
+         custom_handlers = {
+           markdown = require('custom.markdown-handler'),
+           markdown_inline = require('custom.markdown-inline-handler'),
+         },
+      })
     end,
   },
 
