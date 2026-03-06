@@ -29,10 +29,11 @@ require("plugins")
 
 -- 启用Cursor风格主题和快捷键
 vim.schedule(function()
-  local ok, theme = pcall(require, "cursor.theme")
-  if ok then
-    theme.setup()
-  end
+  -- 禁用 cursor 主题覆盖（只使用 spacemacs）
+  -- local ok, theme = pcall(require, "cursor.theme")
+  -- if ok then
+  --   theme.setup()
+  -- end
   
   -- local ok, keymaps = pcall(require, "cursor.keymaps")
   -- if ok then

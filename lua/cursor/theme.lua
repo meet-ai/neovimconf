@@ -32,13 +32,13 @@ M.setup = function()
     -- Light theme colors - brighter and more saturated
     vim.api.nvim_set_hl(0, "Comment", { fg = "#2aa1ae", italic = true })      -- brighter teal
     vim.api.nvim_set_hl(0, "Keyword", { fg = "#3a81c3", bold = true })        -- spacemacs keyword
-    vim.api.nvim_set_hl(0, "Function", { fg = "#6c3163" })                   -- spacemacs func
+    vim.api.nvim_set_hl(0, "Function", { fg = "#bc6ec5", bold = true })      -- brighter purple (same as dark theme)
     vim.api.nvim_set_hl(0, "String", { fg = "#2d9574" })                     -- spacemacs str
-    vim.api.nvim_set_hl(0, "Number", { fg = "#4e3163" })                     -- spacemacs const
-    vim.api.nvim_set_hl(0, "Boolean", { fg = "#4e3163" })                    -- spacemacs const
-    vim.api.nvim_set_hl(0, "Type", { fg = "#ba2f59", bold = true })          -- spacemacs type
-    vim.api.nvim_set_hl(0, "Identifier", { fg = "#715ab1" })                 -- spacemacs var
-    vim.api.nvim_set_hl(0, "Constant", { fg = "#4e3163" })                   -- spacemacs const
+    vim.api.nvim_set_hl(0, "Number", { fg = "#a45bad" })                     -- brighter purple
+    vim.api.nvim_set_hl(0, "Boolean", { fg = "#a45bad" })                    -- brighter purple
+    vim.api.nvim_set_hl(0, "Type", { fg = "#ce537a", bold = true })          -- brighter red (same as dark theme)
+    vim.api.nvim_set_hl(0, "Identifier", { fg = "#7590db" })                 -- brighter blue (same as dark theme)
+    vim.api.nvim_set_hl(0, "Constant", { fg = "#a45bad" })                   -- brighter purple
   end
   
   -- 设置诊断颜色

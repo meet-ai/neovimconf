@@ -369,13 +369,43 @@ map({ "n", "t" }, "<Leader>co", function()
   end
 end, { desc = "Toggle opencode" })
 map({ "n", "t" }, "<Leader>cO", function() pcall(require("opencode").stop) end, { desc = "Hide opencode (close only)" })
+map({ "n", "t" }, "<Leader><Esc>", function() pcall(require("opencode").stop) end, { desc = "Hide opencode" })
 map({ "v", "x" }, "<Leader>aa", function() 
   local ok, opencode = pcall(require, "opencode")
   if ok and opencode.analyze_selection then
     opencode.analyze_selection()
   elseif ok and opencode.ask then
     local context = require("opencode.context").new()
-    opencode.ask("", { context = context })
+    -- 获取选中的文本
+    local selected_text = ""
+    if context.range then
+      local start_line = context.range.from[1]
+      local start_col = context.range.from[2]
+      local end_line = context.range.to[1]
+      local end_col = context.range.to[2]
+      local kind = context.range.kind
+      
+      -- 调整列索引：nvim_buf_get_text 期望 end_col 是排除的，而 context.range.to[2] 是包含的
+      if kind == "char" or kind == "block" then
+        -- 对于字符和块选择，end_col 需要加1
+        end_col = end_col + 1
+        -- 确保不超过行长度
+        local line = vim.api.nvim_buf_get_lines(context.buf, end_line - 1, end_line, false)[1] or ""
+        if end_col > #line then
+          end_col = #line
+        end
+      elseif kind == "line" then
+        -- 行选择：获取整行，列索引设为0和-1（表示行首和行尾）
+        start_col = 0
+        local line = vim.api.nvim_buf_get_lines(context.buf, end_line - 1, end_line, false)[1] or ""
+        end_col = #line
+      end
+      
+      local lines = vim.api.nvim_buf_get_text(context.buf, start_line - 1, start_col, end_line - 1, end_col, {})
+      selected_text = table.concat(lines, "\n")
+    end
+    -- 如果有选中的文本，将其作为默认输入
+    opencode.ask(selected_text, { context = context })
   else
     vim.notify("Opencode not available", vim.log.levels.WARN)
   end

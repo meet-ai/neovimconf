@@ -33,8 +33,9 @@ local function enable_cursor_features()
   -- 设置UI
   vim.opt.showmatch = true
   vim.opt.showmode = false
+  vim.opt.ruler = false
   vim.opt.signcolumn = "yes"
-  vim.opt.cmdheight = 1
+  vim.opt.cmdheight = 0
   
   -- 设置鼠标
   vim.opt.mouse = "a"

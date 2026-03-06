@@ -51,30 +51,30 @@ function M.setup()
     }
   else
     colors = {
-      -- Light Colors (GUI values from Spacemacs)
+      -- Light Colors (GUI values from Spacemacs) - Enhanced contrast
       act1 = {"#e7e5eb", 254, "act1"},
       bg0 = {"#fbf8ef", 255, "bg0"},
       bg1 = {"#efeae9", 255, "bg1"},
       bg2 = {"#e3dedd", 254, "bg2"},
       bg3 = {"#d2ceda", 252, "bg3"},
       bg4 = {"#a8a4ae", 248, "bg4"},
-      fg0 = {"#83758c", 244, "fg0"},
-      fg1 = {"#655370", 241, "fg1"},
-      fg2 = {"#5a4a64", 240, "fg2"},
-      fg3 = {"#504259", 239, "fg3"},
-      fg4 = {"#8c799f", 103, "fg4"},
-      fg5 = {"#c8c6dd", 188, "fg5"},
-      grey = {"#a8a8bf", 145, "grey"},
-      grey1 = {"#768294", 102, "grey1"},
-      red1 = {"#ba2f59", 125, "red1"},
-      blue1 = {"#715ab1", 61, "blue1"},
-      purple0 = {"#6c3163", 240, "purple0"},
+      fg0 = {"#1a1a1a", 234, "fg0"},      -- Dark foreground (near black)
+      fg1 = {"#2a2a2a", 235, "fg1"},      -- Main foreground (dark gray)
+      fg2 = {"#3a3a3a", 236, "fg2"},      -- Secondary foreground
+      fg3 = {"#4a4a4a", 237, "fg3"},      -- Tertiary foreground
+      fg4 = {"#6c3163", 240, "fg4"},      -- Dark purple
+      fg5 = {"#8c799f", 103, "fg5"},
+      grey = {"#888888", 245, "grey"},    -- Medium gray
+      grey1 = {"#666666", 241, "grey1"},  -- Darker gray
+      red1 = {"#cc3333", 160, "red1"},    -- Bright red
+      blue1 = {"#3366cc", 68, "blue1"},   -- Bright blue
+      purple0 = {"#990099", 90, "purple0"},  -- Darker, more saturated purple
       purple1 = {"#86589e", 97, "purple1"},
       purple2 = {"#4e3163", 239, "purple2"},
       purple3 = {"#d3d3e7", 253, "purple3"},
       purple4 = {"#e2e0ea", 188, "purple4"},
-      aqua0 = {"#2d9574", 29, "aqua0"},
-      orange0 = {"#dc752f", 131, "orange0"},  -- Spacemacs war
+      aqua0 = {"#008866", 29, "aqua0"},   -- Bright green
+      orange0 = {"#cc6600", 166, "orange0"},  -- Bright orange
       cyan = {"#21b8c7", 38, "cyan"},
       mat = {"#ba2f59", 125, "mat"},
       meta = {"#da8b55", 173, "meta"},
@@ -96,13 +96,13 @@ function M.setup()
   -- Common colors (regardless of background)
   colors.red = {"#f2241f", 196, "red"}
   colors.red0 = {"#f54e3c", 244, "red0"}
-  colors.blue = {"#4f97d7", 247, "blue"}
-  colors.blue0 = {"#4f97d7", 68, "blue0"}
+  colors.blue = {"#3366cc", 68, "blue"}    -- Brighter blue
+  colors.blue0 = {"#0066cc", 68, "blue0"}  -- Darker blue for keywords
   colors.purple = {"#544a65", 59, "purple"}
   colors.green = {"#67b11d", 242, "green"}
-  colors.green0 = {"#2aa1ae", 244, "green0"}
+  colors.green0 = {"#008888", 30, "green0"}  -- Brighter teal for comments
   colors.aqua = {"#4495b4", 244, "aqua"}
-  colors.orange = {"#dc752f", 246, "orange"}
+  colors.orange = {"#cc6600", 166, "orange"}  -- Brighter orange
   colors.yellow = {"#b1951d", 136, "yellow"}
   colors.yellow1 = {"#e5d11c", 247, "yellow1"}
   colors.war = {"#dc752f", 244, "war"}
@@ -144,8 +144,8 @@ function M._apply_highlights()
     Character = {fg = colors.purple0},
     Boolean = {fg = colors.war},
     Float = {fg = colors.float},
-    Identifier = {fg = colors.blue1},
-    Function = {fg = colors.purple0, style = 'bold'},
+    Identifier = {fg = colors.blue},
+    Function = {fg = colors.blue0, style = 'bold'},
     Statement = {fg = colors.blue0},
     Conditional = {fg = colors.blue0, style = 'bold'},
     Repeat = {fg = colors.red1, style = 'bold'},
@@ -260,6 +260,29 @@ function M._apply_highlights()
     end
     
     vim.api.nvim_set_hl(0, group, hl_attrs)
+  end
+  
+  -- Tree-sitter highlight groups (link to traditional groups for better visibility)
+  local ts_highlight_groups = {
+    ["@function"] = "Function",
+    ["@function.call"] = "Function",
+    ["@method"] = "Function",
+    ["@method.call"] = "Function",
+    ["@parameter"] = "Identifier",
+    ["@variable.parameter"] = "Identifier",
+    ["@property"] = "Identifier",
+    ["@variable"] = "Identifier",
+    ["@constant"] = "Constant",
+    ["@type"] = "Type",
+    ["@keyword"] = "Keyword",
+    ["@string"] = "String",
+    ["@comment"] = "Comment",
+    ["@number"] = "Number",
+    ["@boolean"] = "Boolean",
+  }
+  
+  for ts_group, link_group in pairs(ts_highlight_groups) do
+    vim.api.nvim_set_hl(0, ts_group, { link = link_group })
   end
   
   -- Set terminal colors
