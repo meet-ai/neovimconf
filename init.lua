@@ -21,6 +21,12 @@ require("core.options")
 require("core.keymaps")
 require("core.theme")
 
+-- 在 Cursor IDE 中打开当前文件（Neovide -> Cursor）
+local ok, open_in_cursor = pcall(require, "custom.open-in-cursor")
+if ok then
+  open_in_cursor.setup({ keymap = "<Leader>gc" })
+end
+
 -- 加载插件
 require("plugins")
 

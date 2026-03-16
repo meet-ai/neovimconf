@@ -165,4 +165,21 @@ return {
       vim.diagnostic.config({ virtual_lines = false })
     end,
   },
+
+  -- Cursor Agent CLI 集成（浮动终端内运行 cursor-agent）
+  -- 前置：cursor-agent 需在 $PATH；详见 doc/cursor-agent-nvim.md
+  {
+    "xTacobaco/cursor-agent.nvim",
+    lazy = true,
+    cmd = { "CursorAgent", "CursorAgentSelection", "CursorAgentBuffer" },
+    config = function()
+      require("cursor-agent").setup({
+        cmd = "cursor-agent",
+        args = {},
+      })
+      vim.keymap.set("n", "<leader>ca", ":CursorAgent<CR>", { desc = "Cursor Agent: Toggle terminal" })
+      vim.keymap.set("v", "<leader>ca", ":CursorAgentSelection<CR>", { desc = "Cursor Agent: Send selection" })
+      vim.keymap.set("n", "<leader>cA", ":CursorAgentBuffer<CR>", { desc = "Cursor Agent: Send buffer" })
+    end,
+  },
 }
