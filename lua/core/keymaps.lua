@@ -3,13 +3,8 @@ Doom Emacs风格快捷键 for Neovim
 基于Doom Emacs快捷键表的统一方案
 Leader 为逗号，避免与输入空格冲突；Space 为 local leader
 --]]
-
-vim.g.mapleader = ","
-vim.g.maplocalleader = " "
-
--- 设置异步处理
-vim.opt.updatetime = 100
-vim.opt.timeoutlen = 500
+-- 注意：mapleader/maplocalleader 在 init.lua 中设置（lazy.setup 之前）；
+-- updatetime/timeoutlen 在 core/options.lua 中设置。此处不重复设置。
 
 -- map 同时注册 <Leader> 和 <LocalLeader>，这样按空格也能显示快捷键提示
 local function map(mode, lhs, rhs, opts)

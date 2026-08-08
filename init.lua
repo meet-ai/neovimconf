@@ -18,12 +18,16 @@ vim.g.maplocalleader = " "
 require("core.bootstrap")
 
 -- 加载Cursor风格核心配置
-require("core.cursor")
+-- 环境/平台适配(PATH、剪贴板)
+require("core.env")
 
 -- 加载原始核心配置（兼容性）
 require("core.options")
 require("core.keymaps")
 require("core.theme")
+
+-- 静默自动保存
+require("core.autosave")
 
 -- 在 Cursor IDE 中打开当前文件（Neovide -> Cursor）
 local ok, open_in_cursor = pcall(require, "custom.open-in-cursor")

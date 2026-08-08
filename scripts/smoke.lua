@@ -25,8 +25,8 @@ end
 
 -- 1. 核心模块可加载
 local core_mods = {
-  "core.bootstrap", "core.options", "core.keymaps", "core.theme",
-  "core.cursor", "core.readonly",
+  "core.bootstrap", "core.env", "core.options", "core.keymaps", "core.theme",
+  "core.autosave", "core.readonly",
 }
 for _, m in ipairs(core_mods) do
   local ok, err = module_ok(m)
