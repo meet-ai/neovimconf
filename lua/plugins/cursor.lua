@@ -41,36 +41,27 @@ return {
     end,
   },
 
-  -- 项目管理 (类似Cursor的项目切换)
-  {
-    "ahmedkhalf/project.nvim",
-    config = function()
-      require("project_nvim").setup({
-        detection_methods = { "pattern" },
-        patterns = { ".git", "package.json", "pyproject.toml", "Cargo.toml" },
-        silent_chdir = true,
-      })
-    end,
-  },
-
-  -- 代码大纲 (类似Cursor的Outline)
-  {
-    "stevearc/aerial.nvim",
-    opts = {
-      layout = {
-        default_direction = "right",
-        min_width = 30,
-      },
-      attach_mode = "global",
-      show_guides = true,
-    },
-  },
-
   -- 增强注释 (类似Cursor的智能注释)
   {
     "numToStr/Comment.nvim",
     opts = {},
     lazy = false,
+  },
+
+  -- 代码注释便签（行级 annotation + 浮窗编辑）
+  {
+    "winter-again/annotate.nvim",
+    dependencies = { "kkharji/sqlite.lua" },
+    config = function()
+      require("annotate").setup({
+        db_uri = vim.fn.stdpath("data") .. "/annotations_db",
+        annot_sign = "󰍕",
+        annot_sign_hl = "Comment",
+        annot_sign_hl_current = "FloatBorder",
+        annot_win_width = 30,
+        annot_win_padding = 2,
+      })
+    end,
   },
 
   -- 自动补全增强 (需要 Node.js 22+)
@@ -100,6 +91,37 @@ return {
     config = function()
       local rainbow_delimiters = require "rainbow-delimiters"
       vim.g.rainbow_delimiters = {
+        -- 无 parser / 特殊 UI 缓冲区：rainbow lib.attach 在 parser==nil 时会报错（如 NvimTree）
+        condition = function(bufnr)
+          if not vim.api.nvim_buf_is_valid(bufnr) then
+            return false
+          end
+          local ft = vim.bo[bufnr].filetype
+          local skip_ft = {
+            fzfnav = true,
+            ["feature-nav"] = true,
+            NvimTree = true,
+            ["neo-tree"] = true,
+            ["neo-tree-popup"] = true,
+            qf = true,
+            help = true,
+            lazy = true,
+            lspinfo = true,
+            notify = true,
+          }
+          if skip_ft[ft] then
+            return false
+          end
+          local lang = vim.treesitter.language.get_lang(ft)
+          if not lang then
+            return false
+          end
+          local ok, parser = pcall(vim.treesitter.get_parser, bufnr, lang)
+          if not ok or parser == nil then
+            return false
+          end
+          return true
+        end,
         strategy = {
           [""] = rainbow_delimiters.strategy["global"],
         },
@@ -134,35 +156,12 @@ return {
   },
 ]]
 
-  -- 浮动窗口管理 (类似Cursor的弹出窗口)
-  {
-    "gelguy/wilder.nvim",
-    config = function()
-      local wilder = require("wilder")
-      wilder.setup({ modes = { ":", "/", "?" } })
-      wilder.set_option("renderer", wilder.popupmenu_renderer({
-        highlighter = wilder.basic_highlighter(),
-        left = { " ", wilder.popupmenu_devicons() },
-        right = { " ", wilder.popupmenu_scrollbar() },
-      }))
-    end,
-  },
-
   -- 更好的搜索界面
   {
     "nvim-telescope/telescope-fzf-native.nvim",
     build = "make",
     config = function()
       require("telescope").load_extension("fzf")
-    end,
-  },
-
-  -- 悬浮诊断信息
-  {
-    "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
-    config = function()
-      require("lsp_lines").setup()
-      vim.diagnostic.config({ virtual_lines = false })
     end,
   },
 

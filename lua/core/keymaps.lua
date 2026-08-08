@@ -1,17 +1,36 @@
 --[[
 Doom Emacs风格快捷键 for Neovim
 基于Doom Emacs快捷键表的统一方案
-SPC为Leader键，,为local leader
+Leader 为逗号，避免与输入空格冲突；Space 为 local leader
 --]]
 
-vim.g.mapleader = " "
-vim.g.maplocalleader = ","
+vim.g.mapleader = ","
+vim.g.maplocalleader = " "
 
 -- 设置异步处理
 vim.opt.updatetime = 100
 vim.opt.timeoutlen = 500
 
-local map = vim.keymap.set
+-- map 同时注册 <Leader> 和 <LocalLeader>，这样按空格也能显示快捷键提示
+local function map(mode, lhs, rhs, opts)
+  vim.keymap.set(mode, lhs, rhs, opts)
+  -- 如果是以 <Leader> 开头的映射，也注册一份到 <LocalLeader>（空格）
+  if type(lhs) == "string" and lhs:find("<Leader>", 1, true) then
+    local llhs = lhs:gsub("<Leader>", "<LocalLeader>")
+    if llhs ~= lhs then
+      local lopts = opts and vim.tbl_deep_extend("force", {}, opts) or {}
+      -- 终端模式下的 <C-\><C-O> 序列不适合用 <LocalLeader> 重复注册
+      if type(mode) == "string" and (mode ~= "t") then
+        vim.keymap.set(mode, llhs, rhs, lopts)
+      elseif type(mode) == "table" then
+        local nmode = vim.tbl_filter(function(m) return m ~= "t" end, mode)
+        if #nmode > 0 then
+          vim.keymap.set(nmode, llhs, rhs, lopts)
+        end
+      end
+    end
+  end
+end
 
 -- Helper function for safe command execution
 local function safe_cmd(cmd)
@@ -31,21 +50,6 @@ end
        vim.notify("Telescope not available", vim.log.levels.WARN)
      end
    end
- end
-
- -- Helper function for merged search (commands & keymaps)
- local function merged_search()
-   vim.ui.select(
-     { "commands", "keymaps" },
-     { prompt = "Search type:" },
-     function(choice)
-       if choice == "commands" then
-         telescope_builtin("commands")()
-       elseif choice == "keymaps" then
-         telescope_builtin("keymaps")()
-       end
-     end
-   )
  end
 
 -- ============================================================================
@@ -87,6 +91,23 @@ map("n", "<Leader>fR", function()
   end)
 end, { desc = "Rename file" })
 
+-- FeatureNav / fzfnav（归类到搜索分组 SPC s）
+map("n", "<Leader>sl", function()
+  local ok, err = pcall(function()
+    require("feature-nav.fzfnav").show()
+  end)
+  if not ok then
+    vim.notify("feature-nav.fzfnav: " .. tostring(err), vim.log.levels.ERROR)
+  end
+end, { desc = "Label 导航浮窗 (fzfnav)" })
+map("n", "<Leader>sq", function()
+  vim.ui.input({ prompt = "Label 搜索: " }, function(query)
+    if query and query ~= "" then
+      pcall(require("feature-nav.fzfnav").search, query)
+    end
+  end)
+end, { desc = "Label 语义搜索 (fzfnav)" })
+
 -- ============================================================================
 -- 缓冲区操作 (SPC b)
 -- ============================================================================
@@ -95,7 +116,6 @@ map("n", "<Leader>bp", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
 map("n", "<Leader>bn", "<cmd>bnext<cr>", { desc = "Next buffer" })
 map("n", "<Leader>bk", "<cmd>bdelete<cr>", { desc = "Close buffer" })
 map("n", "<Leader>bN", "<cmd>enew<cr>", { desc = "New empty buffer" })
-map("n", "<Leader><Tab>", "<cmd>bprevious<cr>", { desc = "Switch to last buffer" })
 
 -- ============================================================================
 -- 窗口管理 (SPC w)
@@ -127,36 +147,22 @@ map("n", "<Leader>pr", telescope_builtin("oldfiles"), { desc = "Project recent f
 map("n", "<Leader>p/", telescope_builtin("live_grep"), { desc = "Search in project" })
 map("n", "<Leader>ot", "<cmd>ToggleTerm<cr>", { desc = "Project terminal" })
 
--- ============================================================================
--- 工作区 (SPC TAB)
--- ============================================================================
-map("n", "<Leader><Tab>", "<cmd>lua require('telescope').extensions.workspaces.workspaces()<cr>", { desc = "Workspace menu" })
-map("n", "<Leader><Tab>[", "<cmd>lua require('workspaces').previous()<cr>", { desc = "Previous workspace" })
-map("n", "<Leader><Tab>]", "<cmd>lua require('workspaces').next()<cr>", { desc = "Next workspace" })
-map("n", "<Leader><Tab>1", "<cmd>lua require('workspaces').open(1)<cr>", { desc = "Switch to workspace 1" })
-map("n", "<Leader><Tab>2", "<cmd>lua require('workspaces').open(2)<cr>", { desc = "Switch to workspace 2" })
-map("n", "<Leader><Tab>3", "<cmd>lua require('workspaces').open(3)<cr>", { desc = "Switch to workspace 3" })
-map("n", "<Leader><Tab>4", "<cmd>lua require('workspaces').open(4)<cr>", { desc = "Switch to workspace 4" })
-map("n", "<Leader><Tab>5", "<cmd>lua require('workspaces').open(5)<cr>", { desc = "Switch to workspace 5" })
-map("n", "<Leader><Tab>6", "<cmd>lua require('workspaces').open(6)<cr>", { desc = "Switch to workspace 6" })
-map("n", "<Leader><Tab>7", "<cmd>lua require('workspaces').open(7)<cr>", { desc = "Switch to workspace 7" })
-map("n", "<Leader><Tab>8", "<cmd>lua require('workspaces').open(8)<cr>", { desc = "Switch to workspace 8" })
-map("n", "<Leader><Tab>9", "<cmd>lua require('workspaces').open(9)<cr>", { desc = "Switch to workspace 9" })
-map("n", "<Leader><Tab>n", "<cmd>lua require('workspaces').create()<cr>", { desc = "New workspace" })
-map("n", "<Leader><Tab>d", "<cmd>lua require('workspaces').delete()<cr>", { desc = "Delete workspace" })
-map("n", "<Leader><Tab>r", "<cmd>lua require('workspaces').rename()<cr>", { desc = "Rename workspace" })
+map("n", "<Leader><Tab>", "<cmd>bprevious<cr>", { desc = "Switch to last buffer" })
 
 -- ============================================================================
--- 搜索 (SPC /)
+-- 搜索 (SPC s) - 参考 SpaceEmacs / Doom Emacs 分组
 -- ============================================================================
-map("n", "<Leader>/p", telescope_builtin("live_grep"), { desc = "Search in project" })
-map("n", "<Leader>/P", telescope_builtin("live_grep"), { desc = "Search in another project" })
-map("n", "<Leader>/d", telescope_builtin("live_grep"), { desc = "Search in directory" })
-map("n", "<Leader>/D", telescope_builtin("live_grep"), { desc = "Search in selected directory" })
-map("n", "<Leader>/b", telescope_builtin("current_buffer_fuzzy_find"), { desc = "Search in current buffer" })
-map("n", "<Leader>/i", telescope_builtin("lsp_document_symbols"), { desc = "Symbols in current file" })
-map("n", "<Leader>/I", telescope_builtin("lsp_workspace_symbols"), { desc = "Symbols in all buffers" })
-map("n", "<Leader>*", telescope_builtin("grep_string"), { desc = "Search word under cursor" })
+map("n", "<Leader>ss", telescope_builtin("live_grep"), { desc = "Search in project" })
+map("n", "<Leader>sS", telescope_builtin("live_grep"), { desc = "Search in another project" })
+map("n", "<Leader>sf", telescope_builtin("find_files"), { desc = "Find files" })
+map("n", "<Leader>sd", telescope_builtin("live_grep"), { desc = "Search in directory" })
+map("n", "<Leader>sD", telescope_builtin("live_grep"), { desc = "Search in selected directory" })
+map("n", "<Leader>sb", telescope_builtin("current_buffer_fuzzy_find"), { desc = "Search in current buffer" })
+map("n", "<Leader>sh", telescope_builtin("help_tags"), { desc = "Search help tags" })
+map("n", "<Leader>sr", telescope_builtin("resume"), { desc = "Resume last search" })
+map("n", "<Leader>si", telescope_builtin("lsp_document_symbols"), { desc = "Symbols in current file" })
+map("n", "<Leader>sI", telescope_builtin("lsp_workspace_symbols"), { desc = "Symbols in all buffers" })
+map("n", "<Leader>sw", telescope_builtin("grep_string"), { desc = "Search word under cursor" })
 -- Evil风格高亮搜索
 map("n", "*", "*", { desc = "Search word under cursor forward" })
 map("n", "#", "#", { desc = "Search word under cursor backward" })
@@ -179,15 +185,6 @@ map("n", "#", "#", { desc = "Search word under cursor backward" })
  end, { desc = "Evaluate buffer" })
  map("n", "<Leader>cb", "<cmd>make<cr>", { desc = "Compile/build" })
  map("n", "<Leader>cr", "<cmd>ToggleTerm<cr>", { desc = "REPL" })
- map("n", "<Leader>cx", "<cmd>TroubleToggle<cr>", { desc = "Error list" })
- map("n", "<Leader>cs", function()
-   local ok, aerial = pcall(require, "aerial")
-   if ok then
-     aerial.toggle()
-   else
-     vim.notify("Aerial not available", vim.log.levels.WARN)
-   end
-  end, { desc = "Toggle symbol outline" })
    map("n", "<Leader>cp", function()
      -- 首先检查命令是否存在
      if vim.fn.exists(":TSPlaygroundToggle") == 2 then
@@ -206,25 +203,11 @@ map("n", "#", "#", { desc = "Search word under cursor backward" })
      vim.notify("Tree-sitter Playground 未安装", vim.log.levels.WARN)
      vim.notify("请运行: Lazy install nvim-treesitter/nvim-treesitter-playground", vim.log.levels.INFO)
    end, { desc = "Toggle tree-sitter playground" })
-  
-   map("n", "<Leader>cn", function()
-     local ok, err = pcall(vim.cmd, "Navigator")
-     if ok then
-       vim.notify("Navigator panel opened", vim.log.levels.INFO)
-     else
-       vim.notify("Navigator命令错误: " .. tostring(err), vim.log.levels.ERROR)
-       vim.notify("请检查navigator.lua插件是否正确安装", vim.log.levels.WARN)
-     end
-   end, { desc = "Open Navigator panel" })
 
   -- ============================================================================
  -- Git操作 (SPC g)
 -- ============================================================================
-map("n", "<Leader>gs", "<cmd>Neogit<cr>", { desc = "Magit status" })
-map("n", "<Leader>gd", "<cmd>Neogit<cr>", { desc = "Magit dispatch menu" })
-map("n", "<Leader>gc", "<cmd>Neogit commit<cr>", { desc = "Commit" })
 map("n", "<Leader>gU", "<cmd>Gitsigns undo_stage_hunk<cr>", { desc = "Unstage hunk" })
-map("n", "<Leader>gt", "<cmd>GitTimeMachine<cr>", { desc = "Time machine" })
 
 -- ============================================================================
 -- 上一项/下一项 (SPC [ / SPC ])
@@ -233,8 +216,6 @@ map("n", "<Leader>[e", "<cmd>lprev<cr>", { desc = "Previous error" })
 map("n", "<Leader>]e", "<cmd>lnext<cr>", { desc = "Next error" })
 map("n", "<Leader>[b", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
 map("n", "<Leader>]b", "<cmd>bnext<cr>", { desc = "Next buffer" })
-map("n", "<Leader>[t", "<cmd>TodoTelescope<cr>", { desc = "Previous TODO" })
-map("n", "<Leader>]t", "<cmd>TodoTelescope<cr>", { desc = "Next TODO" })
 map("n", "<Leader>[s", "<cmd>lua vim.diagnostic.goto_prev({severity = vim.diagnostic.severity.WARN})<cr>", { desc = "Previous spelling error" })
 map("n", "<Leader>]s", "<cmd>lua vim.diagnostic.goto_next({severity = vim.diagnostic.severity.WARN})<cr>", { desc = "Next spelling error" })
 
@@ -242,7 +223,6 @@ map("n", "<Leader>]s", "<cmd>lua vim.diagnostic.goto_next({severity = vim.diagno
 -- 开关 (SPC t)
 -- ============================================================================
 map("n", "<Leader>tl", "<cmd>set relativenumber!<cr>", { desc = "Toggle line numbers" })
-map("n", "<Leader>tf", "<cmd>lua require('toggle_check').toggle()<cr>", { desc = "Toggle flycheck" })
 map("n", "<Leader>ts", "<cmd>set spell!<cr>", { desc = "Toggle spell check" })
 map("n", "<Leader>tr", function()
   local ok, readonly = pcall(require, "core.readonly")
@@ -278,65 +258,6 @@ map("n", "zm", "zm", { desc = "Close all folds" })
 -- ============================================================================
 -- 已在Telescope映射中设置
 
--- ============================================================================
--- 兼容性保留 (原有重要快捷键)
--- ============================================================================
-map("n", "<Leader>ff", telescope_builtin("find_files"), { desc = "Find files (compat)" })
-map("n", "<Leader>fg", telescope_builtin("live_grep"), { desc = "Live grep (compat)" })
-map("n", "<Leader>fr", telescope_builtin("oldfiles"), { desc = "Recent files (compat)" })
-map("n", "<Leader>fs", "<cmd>w<cr>", { desc = "Save file (compat)" })
-map("n", "<Leader>fS", "<cmd>wa<cr>", { desc = "Save all files (compat)" })
-map("n", "<Leader>bb", telescope_builtin("buffers"), { desc = "Switch buffer (compat)" })
-map("n", "<Leader>bd", "<cmd>bdelete<cr>", { desc = "Delete buffer (compat)" })
-map("n", "<Leader>bn", "<cmd>bnext<cr>", { desc = "Next buffer (compat)" })
-map("n", "<Leader>bp", "<cmd>bprevious<cr>", { desc = "Previous buffer (compat)" })
-map("n", "<Leader>ww", "<C-w>w", { desc = "Cycle windows (compat)" })
-map("n", "<Leader>wd", "<C-w>c", { desc = "Delete window (compat)" })
-map("n", "<Leader>wD", "<C-w>o", { desc = "Delete other windows (compat)" })
-map("n", "<Leader>ss", telescope_builtin("current_buffer_fuzzy_find"), { desc = "Search in buffer (compat)" })
-map("n", "<Leader>sp", telescope_builtin("live_grep"), { desc = "Search in project (compat)" })
-map("n", "<Leader>sf", telescope_builtin("find_files"), { desc = "Find files (compat)" })
-map("n", "<Leader>sh", telescope_builtin("help_tags"), { desc = "Search help (compat)" })
-map("n", "<Leader>sr", telescope_builtin("resume"), { desc = "Resume last search (compat)" })
-map("n", "<Leader>jd", vim.lsp.buf.definition, { desc = "Jump to definition (compat)" })
-map("n", "<Leader>jr", function()
-  local ok, builtin = pcall(require, "telescope.builtin")
-  if ok then
-    builtin.lsp_references()
-  else
-    vim.lsp.buf.references()
-  end
-end, { desc = "Find references with preview (compat)" })
-map("n", "<Leader>jD", vim.lsp.buf.declaration, { desc = "Jump to declaration (compat)" })
-map("n", "<Leader>ji", vim.lsp.buf.implementation, { desc = "Jump to implementation (compat)" })
-map("n", "<Leader>jt", vim.lsp.buf.type_definition, { desc = "Jump to type definition (compat)" })
-map("n", "<Leader>jb", "<C-o>", { desc = "Jump back (compat)" })
-map("n", "<Leader>jf", "<C-i>", { desc = "Jump forward (compat)" })
-map("n", "<Leader>lr", vim.lsp.buf.rename, { desc = "Rename symbol (compat)" })
-map("n", "<Leader>la", vim.lsp.buf.code_action, { desc = "Code actions (compat)" })
-map("n", "<Leader>lf", vim.lsp.buf.format, { desc = "Format code (compat)" })
-map("n", "<Leader>ld", telescope_builtin("diagnostics"), { desc = "Show diagnostics (compat)" })
-map("n", "<Leader>ls", telescope_builtin("lsp_document_symbols"), { desc = "Document symbols (compat)" })
-map("n", "<Leader>lS", telescope_builtin("lsp_workspace_symbols"), { desc = "Workspace symbols (compat)" })
-map("n", "<Leader>lh", vim.lsp.buf.hover, { desc = "Show documentation (compat)" })
-map("n", "<Leader>h", telescope_builtin("help_tags"), { desc = "Help tags (compat)" })
-map("n", "<Leader>hk", function()
-  local ok, which_key = pcall(require, "which-key")
-  if ok then
-    which_key.show("", { mode = "n" })
-  end
-end, { desc = "Show keybindings (compat)" })
-map("n", "<Leader>x", "<cmd>q<cr>", { desc = "Quit (compat)" })
-map("n", "<Leader>X", "<cmd>qa<cr>", { desc = "Quit all (compat)" })
-map("n", "<Leader>w", "<cmd>w<cr>", { desc = "Write (compat)" })
-map("n", "<Leader>W", "<cmd>wa<cr>", { desc = "Write all (compat)" })
-map("n", "<Leader>q", function()
-  local win_count = vim.fn.winnr("$")
-  if win_count > 1 then
-    vim.cmd("wincmd w")
-  end
-end, { desc = "Switch to other window (compat)" })
-
 -- 传统Vim快捷键保留
 map("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
 map("n", "gr", function()
@@ -350,26 +271,100 @@ end, { desc = "Find references with preview" })
 map("n", "gi", vim.lsp.buf.implementation, { desc = "Go to implementation" })
 map("n", "K", vim.lsp.buf.hover, { desc = "Show documentation" })
 
--- Opencode快捷键保留
-map({ "n", "t" }, "<Leader>co", function() 
+-- Opencode：见 nickjvandyke/opencode.nvim README —「toggle 不要绑在会与 TUI 抢键的模式上」。
+--
+-- 原因简述（Neovim 0.12+）：
+-- 1) Terminal-Job（`t`）：空格等会先给 opencode，<Leader>… 往往匹配不到映射。
+-- 2) Terminal-Normal（`nt`，即 <C-\><C-n> 之后）：`nmap`/`tmap` 都不生效，<Leader>co 不会被拦截，`c`/`o`
+--    会按终端缓冲区的普通键处理，容易又回到 TUI 插入态，看起来像「关不掉」。
+-- 对策：`t` 下用 <C-\><C-O> 插入一帧 Normal 执行 <Cmd>lua（不经过 Leader 解析）；`nt` 下请用命令
+--    :OpencodeToggleWin 或先 <C-w>p 切到普通窗口再 <Leader>co。
+local function opencode_toggle_lazy()
+  local function focus_opencode_terminal_if_visible()
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      local buf = vim.api.nvim_win_get_buf(win)
+      if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == "terminal" then
+        local name = vim.api.nvim_buf_get_name(buf) or ""
+        if name:match("term://") and name:match("opencode") then
+          vim.api.nvim_set_current_win(win)
+          vim.cmd("startinsert")
+          return true
+        end
+      end
+    end
+    return false
+  end
+
   local ok, opencode = pcall(require, "opencode")
   if ok then
     opencode.toggle()
+    vim.schedule(function()
+      focus_opencode_terminal_if_visible()
+    end)
   else
     vim.notify("Opencode not loaded, trying to load plugin...", vim.log.levels.WARN)
-    vim.cmd("Lazy load nickjvandyke/opencode.nvim")
+    local loaded = pcall(vim.cmd, "Lazy load opencode.nvim")
+    if not loaded then
+      -- Fallback for Lazy versions/configs that still expect full plugin spec.
+      pcall(vim.cmd, "Lazy load nickjvandyke/opencode.nvim")
+    end
     vim.defer_fn(function()
       local ok2, opencode2 = pcall(require, "opencode")
       if ok2 then
         opencode2.toggle()
+        vim.schedule(function()
+          focus_opencode_terminal_if_visible()
+        end)
       else
         vim.notify("Failed to load opencode", vim.log.levels.ERROR)
       end
     end, 100)
   end
-end, { desc = "Toggle opencode" })
-map({ "n", "t" }, "<Leader>cO", function() pcall(require("opencode").stop) end, { desc = "Hide opencode (close only)" })
-map({ "n", "t" }, "<Leader><Esc>", function() pcall(require("opencode").stop) end, { desc = "Hide opencode" })
+end
+
+vim.api.nvim_create_user_command("OpencodeToggleWin", function()
+  opencode_toggle_lazy()
+end, { desc = "切换 opencode 浮窗（任意模式可在命令行用）" })
+
+vim.api.nvim_create_user_command("OpencodeStopWin", function()
+  pcall(require("opencode").stop)
+end, { desc = "关闭 opencode 终端 job（任意模式）" })
+
+map("n", "<Leader>co", opencode_toggle_lazy, { desc = "Toggle opencode" })
+-- Terminal-Job：`t` 映射 + <C-\><C-O> 让 Neovim 执行 toggle，不把 Leader 交给 PTY（与插件 README 的 <C-.> 思路一致）
+vim.keymap.set(
+  "t",
+  "<Leader>co",
+  "<C-\\><C-O><Cmd>lua require('opencode').toggle()<CR>",
+  { desc = "Toggle opencode（在 opencode TUI 内）", silent = true, remap = false }
+)
+map("n", "<Leader>aa", opencode_toggle_lazy, { desc = "Toggle opencode (same as <Leader>co)" })
+map("t", "<F12>", "<C-\\><C-O><Cmd>lua require('opencode').toggle()<CR>", { desc = "Toggle opencode（无 Leader）", silent = true, remap = false })
+map("n", "<Leader>cO", function() pcall(require("opencode").stop) end, { desc = "Hide opencode (close only)" })
+vim.keymap.set("t", "<Leader>cO", "<C-\\><C-O><Cmd>lua pcall(require('opencode').stop)<CR>", { silent = true, remap = false })
+map("n", "<Leader><Esc>", function() pcall(require("opencode").stop) end, { desc = "Hide opencode" })
+vim.keymap.set("t", "<Leader><Esc>", "<C-\\><C-O><Cmd>lua pcall(require('opencode').stop)<CR>", { silent = true, remap = false })
+map("t", "<F11>", "<C-\\><C-O><Cmd>lua pcall(require('opencode').stop)<CR>", { desc = "Stop opencode（无 Leader）", silent = true, remap = false })
+-- 终端插入模式：回到上一窗口；若当前是浮窗终端（如 opencode），再隐藏浮窗以免挡在「前台」，进程仍保留
+local function terminal_focus_prev_and_hide_float()
+  local win = vim.api.nvim_get_current_win()
+  local rel = vim.api.nvim_win_get_config(win).relative
+  local is_float = rel ~= nil and rel ~= ""
+  vim.api.nvim_feedkeys(
+    vim.api.nvim_replace_termcodes("<C-\\><C-n><C-w>p", true, true, true),
+    "n",
+    false
+  )
+  if not is_float then
+    return
+  end
+  vim.defer_fn(function()
+    if vim.api.nvim_win_is_valid(win) then
+      pcall(vim.api.nvim_win_hide, win)
+    end
+  end, 0)
+end
+map("t", "<C-w>p", terminal_focus_prev_and_hide_float, { desc = "Terminal: prev window; hide float if any (keep job)" })
 map({ "v", "x" }, "<Leader>aa", function() 
   local ok, opencode = pcall(require, "opencode")
   if ok and opencode.analyze_selection then
@@ -433,6 +428,24 @@ map("n", "<Leader>af", function()
     end,
   })
 end, { desc = "Select file for opencode (@file)" })
+
+map("n", "<Leader>an", function()
+  local ok, annotate = pcall(require, "annotate")
+  if ok then
+    annotate.create_annotation()
+  else
+    vim.notify("annotate.nvim not available", vim.log.levels.WARN)
+  end
+end, { desc = "Annotation: add/edit (float)" })
+
+map("n", "<Leader>aN", function()
+  local ok, annotate = pcall(require, "annotate")
+  if ok then
+    annotate.delete_annotation()
+  else
+    vim.notify("annotate.nvim not available", vim.log.levels.WARN)
+  end
+end, { desc = "Annotation: delete" })
 
 -- 插件管理快捷键保留
 map("n", "<Leader>uu", function() vim.cmd("Lazy update") end, { desc = "Update all plugins" })

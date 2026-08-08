@@ -84,17 +84,16 @@ local function enable_cursor_features()
     pattern = "*",
   })
   
-   -- 应用Cursor风格主题
-  pcall(vim.cmd, [[colorscheme spacemacs]])
-  pcall(vim.cmd, [[set background=light]])
+   -- 应用默认配色（与 core/theme.lua 一致）
+  pcall(vim.cmd, [[set background=dark]])
+  pcall(vim.cmd, [[colorscheme desert]])
 end
 
 -- 只保留Neovim原生快捷键，不添加VSCode风格快捷键
 local function setup_cursor_keymaps()
-  -- 保持原有Spacemacs风格的Leader键
-  vim.g.mapleader = " "
-  vim.g.maplocalleader = " "
-  
+  -- Leader 必须在 init.lua 里、在 lazy.setup 之前设置；此处禁止再改 vim.g.mapleader /
+  -- vim.g.maplocalleader，否则 lazy.nvim 的 change detection 会认为「启动后改了 leader」
+  -- 并反复提示 maplocalleader/mapleader BEFORE loading lazy。
   -- 不添加任何VSCode风格的快捷键
   -- 所有功能通过Leader键组合访问
 end
@@ -103,18 +102,6 @@ end
 local function load_cursor_config()
   enable_cursor_features()
   setup_cursor_keymaps()
-  
-  -- 加载独立的Cursor快捷键模块
-  local ok, keymaps = pcall(require, "cursor.keymaps")
-  if ok then
-    keymaps.setup()
-  end
-  
-  -- 加载Cursor主题
-  local ok, theme = pcall(require, "cursor.theme")
-  if ok then
-    theme.setup()
-  end
 end
 
 -- 立即启用基本功能（不依赖VimEnter）

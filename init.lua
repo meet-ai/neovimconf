@@ -10,6 +10,10 @@ Cursor编辑器特性包含：
 5. AI增强的工作流
 ]]
 
+-- Must be set before loading lazy.nvim
+vim.g.mapleader = ","
+vim.g.maplocalleader = " "
+
 -- bootstrap lazy.nvim
 require("core.bootstrap")
 
@@ -29,6 +33,14 @@ end
 
 -- 加载插件
 require("plugins")
+
+-- 轻量 codemap（:CodeAnalyze、<leader>cm 说明浮窗）
+local ok, codemap = pcall(require, "codemap")
+if ok then
+  codemap.setup()
+else
+  vim.notify("codemap 模块加载失败，请检查 lua/codemap.lua", vim.log.levels.WARN)
+end
 
 -- 加载Cursor风格插件 (现在通过lazy.nvim导入)
 -- require("plugins.cursor")

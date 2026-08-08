@@ -36,15 +36,15 @@ lazy.setup({
     "williamboman/mason-lspconfig.nvim",
     config = function()
       require("mason-lspconfig").setup({
+        -- 仅填 mason-registry 里存在的 lspconfig 名；Metals 不在 Mason 中，Scala 用 lua/lsp/init.lua 手动 cmd
         ensure_installed = {
           "jdtls",
           "gopls",
           "pyright",
-          "tsserver",
+          "ts_ls", -- 原 tsserver，与 nvim-lspconfig / mason-lspconfig 命名一致
           "rust_analyzer",
           "clangd",
-          "metals",
-          "marksman",  -- Markdown LSP
+          "marksman", -- Markdown LSP
         },
       })
     end,
@@ -61,26 +61,6 @@ lazy.setup({
     },
     config = function()
       require("lsp.init")
-    end,
-  },
-
-  -- Navigator.lua - 智能代码导航
-  {
-    "ray-x/navigator.lua",
-    dependencies = {
-      "ray-x/guihua.lua",
-      "neovim/nvim-lspconfig",
-    },
-    config = function()
-      require("navigator").setup({
-        mason = false,
-        lsp = {
-          enable = true,
-          code_action = { enable = true },
-          code_lens_action = { enable = true },
-        },
-      })
-      vim.cmd('command! Navigator lua require("navigator.sidepanel").lsp_and_diag_panel()')
     end,
   },
 
@@ -182,54 +162,13 @@ lazy.setup({
         window = {
           border = "single",
         },
-        triggers_blacklist = {
-          i = { "j", "k" },
-          v = { "j", "k" },
+        -- v3: triggers_blacklist → triggers.disable; 默认已包含 <auto> 自动检测前缀键
+        triggers = {
+          { "<auto>", mode = "nxso" },
         },
       })
     end,
   },
-  { 'wakatime/vim-wakatime', lazy = false },
-  {
-    'stevearc/aerial.nvim',
-    opts = {},
-
-    -- Optional dependencies
-    dependencies = {
-       "nvim-treesitter/nvim-treesitter",
-       "nvim-tree/nvim-web-devicons"
-    },
-    config = function()
-      require('aerial').setup({
-        -- 设置布局为右侧
-        layout = {
-          default_direction = "right",
-          placement = "edge",
-          width = 30,
-        },
-        -- 在特定文件类型下自动打开
-        attach_mode = "global",
-        -- 设置文件类型
-      })
-    end,
-  },
-  {
-    "t9md/vim-choosewin",
-    config = function()
-        vim.g.choosewin_overlay_enable = 1        -- 启用覆盖模式
-        vim.g.choosewin_statusline_replace = 1    -- 替换状态栏
-        vim.g.choosewin_tabline_replace = 0       -- 不替换标签栏
-        vim.g.choosewin_color_overlay = {
-            gui = { '#88c0d0', '#434C5E' },       -- 设置覆盖颜色
-            cterm = { 'blue', 'black' }
-        }
-        vim.g.choosewin_color_overlay_current = {
-            gui = { '#88c0d0', '#434C5E' },
-            cterm = { 'blue', 'black' }
-        }
-    end,
-  },
-
   -- 文件树
   {
     "nvim-tree/nvim-tree.lua",
@@ -356,6 +295,11 @@ lazy.setup({
            },
          },
         })
+       -- Fix nvim-treesitter directives for Neovim 0.12.x compatibility.
+       -- Neovim 0.12 changed match:captures() to return TSNode[] per capture ID,
+       -- but nvim-treesitter's master branch (archived) treats it as a single TSNode.
+       -- This overrides the broken directives with TSNode[]-aware versions.
+       require("custom.fix-ts-directive")
       end,
     },
 
@@ -388,165 +332,41 @@ lazy.setup({
           },
         },
       }
-      -- 插件默认 server 会 require("opencode.terminal")，该模块仓库中不存在，故自实现 start/stop/toggle
-      local opencode_server_buf = nil
-      local opencode_server_win = nil
-      -- 通过 termopen 默认 buffer 名 term://...opencode 查找已有窗口（不用固定名，避免 "name already exists"）
-       local function opencode_find_existing_win()
-         for _, win in ipairs(vim.api.nvim_list_wins()) do
-           if vim.api.nvim_win_is_valid(win) then
-             local buf = vim.api.nvim_win_get_buf(win)
-             if vim.api.nvim_buf_is_valid(buf) then
-               local name = vim.api.nvim_buf_get_name(buf)
-               if name and name:find("term://") and name:find("opencode") then
-                 return win
-               end
-             end
-           end
-         end
-         return nil
-       end
-
-        local function opencode_find_existing_buf()
-          -- 首先检查已有的变量是否有效
-          if opencode_server_buf and vim.api.nvim_buf_is_valid(opencode_server_buf) then
-            return opencode_server_buf
-          end
-          -- 遍历所有缓冲区，查找终端缓冲区或名称匹配的
-          for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-            if vim.api.nvim_buf_is_valid(buf) then
-              local name = vim.api.nvim_buf_get_name(buf)
-              local buftype = vim.api.nvim_buf_get_option(buf, "buftype")
-              -- 检查是否为终端缓冲区且名称包含 opencode
-              if buftype == "terminal" then
-                if name and name:find("opencode") then
-                  return buf
-                end
-                -- 如果没有名称匹配，但可能是 opencode 终端（通过其他方式识别）
-                -- 我们可以检查缓冲区内容或作业状态，但暂时只检查名称
-              end
-            end
-          end
-          return nil
-        end
-
-        local function opencode_close_win()
-          local win = opencode_server_win or (vim.g.opencode_embed_winid and vim.g.opencode_embed_winid or nil)
-          if win and vim.api.nvim_win_is_valid(win) then
-            vim.api.nvim_win_close(win, true)
-          end
-          opencode_server_win = nil
-          -- 不清除 opencode_server_buf，以便后续重新打开窗口
-          vim.g.opencode_embed_winid = nil
-        end
-        -- 暴露给全局，供终端模式映射使用
-        vim.g.opencode_close_win = opencode_close_win
-
-       local function opencode_embed_toggle()
-         local win = opencode_find_existing_win()
-         if win then
-           opencode_server_win = win
-           opencode_server_buf = vim.api.nvim_win_get_buf(win)
-           -- 当前就在 opencode 窗口：只切走焦点（隐藏），不关闭
-           if vim.api.nvim_get_current_win() == win then
-             if vim.fn.winnr("$") > 1 then
-               vim.cmd("wincmd w")
-             end
-             return
-           end
-           -- 在别的窗口：聚焦到 opencode
-           vim.api.nvim_set_current_win(win)
-           return
-         end
-          -- 没有现有窗口，查找现有缓冲区
-          local buf = opencode_find_existing_buf()
-           if buf then
-             opencode_server_buf = buf
-             -- 缓冲区存在但没有窗口，重新打开窗口
-             vim.notify("Found existing opencode buffer", vim.log.levels.INFO)
-              -- 确保有 <C-q> 映射（可能已存在，但覆盖也无妨）
-              vim.api.nvim_buf_set_keymap(opencode_server_buf, "n", "<C-q>", "", {
-                callback = opencode_close_win,
-                noremap = true,
-                silent = true,
-              })
-              vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<C-q>", "<C-\\><C-n><cmd>lua vim.g.opencode_close_win()<CR>", { noremap = true, silent = true })
-                -- Esc 退出终端插入模式
-                vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<Esc>", "<C-\\><C-n>", { noremap = true, silent = true })
-                -- Leader+Esc 退出终端插入模式
-                vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<Leader><Esc>", "<C-\\><C-n>", { noremap = true, silent = true })
-          else
-             -- 创建新缓冲区
-             vim.notify("Creating new opencode buffer", vim.log.levels.INFO)
-             opencode_server_buf = vim.api.nvim_create_buf(false, true)
-            -- 绑定 <C-q> 关闭窗口（隐藏）
-            vim.api.nvim_buf_set_keymap(opencode_server_buf, "n", "<C-q>", "", {
-              callback = opencode_close_win,
-              noremap = true,
-              silent = true,
-            })
-            vim.api.nvim_create_autocmd("TermClose", {
-              buffer = opencode_server_buf,
-              once = true,
-              callback = function()
-                if opencode_server_win and vim.api.nvim_win_is_valid(opencode_server_win) then
-                  vim.api.nvim_win_close(opencode_server_win, true)
-                end
-                opencode_server_win = nil
-                opencode_server_buf = nil
-                vim.g.opencode_embed_winid = nil
-              end,
-            })
-               vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<C-q>", "<C-\\><C-n><cmd>lua vim.g.opencode_close_win()<CR>", { noremap = true, silent = true })
-               -- Esc 退出终端插入模式
-               vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<Esc>", "<C-\\><C-n>", { noremap = true, silent = true })
-               -- Leader+Esc 退出终端插入模式
-               vim.api.nvim_buf_set_keymap(opencode_server_buf, "t", "<Leader><Esc>", "<C-\\><C-n>", { noremap = true, silent = true })
-                vim.fn.termopen("opencode attach http://127.0.0.1:28080", { cwd = vim.loop.cwd() })
-         end
-         -- 现在打开窗口（无论是现有缓冲区还是新缓冲区）
-         local width = math.floor(vim.o.columns * 0.8)
-         local height = math.floor(vim.o.lines * 0.8)
-         local row = math.floor((vim.o.lines - height) / 2)
-         local col = math.floor((vim.o.columns - width) / 2)
-          opencode_server_win = vim.api.nvim_open_win(opencode_server_buf, true, {
-            relative = "editor",
-            width = width,
-            height = height,
-            row = row,
-            col = col,
-            style = "minimal",
-            border = "rounded",
-          })
-          vim.g.opencode_embed_winid = opencode_server_win
-          -- 如果是终端缓冲区，进入插入模式
-          if vim.api.nvim_buf_is_valid(opencode_server_buf) then
-            local buftype = vim.api.nvim_buf_get_option(opencode_server_buf, "buftype")
-            if buftype == "terminal" then
-              vim.cmd("startinsert")
-            end
-          end
-       end
-       ---@type opencode.Opts
-       -- vim.g 不能放函数、不能放混合 key 的 table，只放简单值；server/keys 稍后直接写 opts
-       -- vim.g.opencode_opts 已在上面设置
-       local opencode_config_ok, opencode_config = pcall(require, "opencode.config")
-       if not opencode_config_ok then
-         vim.notify("Failed to load opencode.config, using default config", vim.log.levels.WARN)
-         opencode_config = { opts = {} }
-       end
-        opencode_config.opts.server = {
-          start = function()
-            if not (opencode_server_win and vim.api.nvim_win_is_valid(opencode_server_win)) then
-              opencode_embed_toggle()
-            end
-          end,
-           stop = function()
-             opencode_close_win()
-           end,
-          toggle = opencode_embed_toggle,
-        }
-        opencode_config.opts.cmd = {"opencode", "attach", "http://127.0.0.1:28080"}
+      -- 浮窗里显示完整 opencode TUI：用官方 `opencode.terminal`（README 推荐）。
+      -- `opencode attach` 只会短暂连 HTTP 并退出，浮窗里看不到交互界面。
+      -- 注意：不指定固定端口（默认随机端口）——固定端口可能与外部 `opencode serve`（如
+      -- lark-channel-bridge 的远程桥接）冲突；端口被占时 opencode 会静默挂起、TUI 无法渲染。
+      local opencode_term_cmd = "opencode"
+      local opencode_float_w = math.floor(vim.o.columns * 0.85)
+      local opencode_float_h = math.floor(vim.o.lines * 0.85)
+      local opencode_float_win = {
+        relative = "editor",
+        width = opencode_float_w,
+        height = opencode_float_h,
+        row = math.floor((vim.o.lines - opencode_float_h) / 2),
+        col = math.floor((vim.o.columns - opencode_float_w) / 2),
+        style = "minimal",
+        border = "rounded",
+      }
+      ---@type opencode.Opts
+      -- vim.g 不能放函数、不能放混合 key 的 table，只放简单值；server/keys 稍后直接写 opts
+      -- vim.g.opencode_opts 已在上面设置
+      local opencode_config_ok, opencode_config = pcall(require, "opencode.config")
+      if not opencode_config_ok then
+        vim.notify("Failed to load opencode.config, using default config", vim.log.levels.WARN)
+        opencode_config = { opts = {} }
+      end
+      opencode_config.opts.server = {
+        start = function()
+          require("opencode.terminal").start(opencode_term_cmd, opencode_float_win)
+        end,
+        stop = function()
+          require("opencode.terminal").stop()
+        end,
+        toggle = function()
+          require("opencode.terminal").toggle(opencode_term_cmd, opencode_float_win)
+        end,
+      }
       -- 输入栏关闭/取消：Ctrl+Q、Esc
       if opencode_config.opts.ask and opencode_config.opts.ask.snacks and opencode_config.opts.ask.snacks.win then
         local win_keys = opencode_config.opts.ask.snacks.win.keys or {}
@@ -566,11 +386,8 @@ lazy.setup({
       -- 确保 opencode 模块正确初始化
       local ok, opencode = pcall(require, "opencode")
       if ok then
-        if opencode.setup then
-          opencode.setup()
-        else
-          vim.notify("Opencode module loaded but setup is nil", vim.log.levels.WARN)
-        end
+        -- opencode.nvim exposes runtime APIs; no setup() on module table in current versions.
+        -- Requiring the module here is enough to verify availability.
       else
         vim.notify("Failed to load opencode module: " .. tostring(opencode), vim.log.levels.ERROR)
       end
@@ -627,7 +444,7 @@ lazy.setup({
     lazy = false,
     version = false,
   },
-  install = { colorscheme = { "tokyonight", "gruvbox" } },
+  install = { colorscheme = { "desert", "tokyonight", "gruvbox" } },
   checker = { 
     enabled = true,   -- 启用插件更新检查
     notify = true,    -- 启用更新通知

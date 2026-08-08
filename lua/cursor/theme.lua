@@ -4,7 +4,7 @@ local M = {}
 
 -- 应用Cursor风格主题覆盖
 M.setup = function()
-  -- 注意: 主主题已在 core/theme.lua 中通过 themes.spacemacs 设置
+  -- 注意: 主主题已在 core/theme.lua 中设为 desert
   -- 这里只设置覆盖和自定义
   
   local is_dark = vim.o.background == "dark"
@@ -108,7 +108,7 @@ M.toggle_theme = function()
   end
   
   -- 重新加载主题
-  vim.cmd('colorscheme spacemacs')
+  vim.cmd('colorscheme desert')
   
   -- 应用覆盖
   M.setup()

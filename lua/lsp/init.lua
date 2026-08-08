@@ -1,7 +1,7 @@
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
--- 设置 LSP 日志级别（静默模式）
-vim.lsp.set_log_level("off")
+-- 设置 LSP 日志级别（静默模式）；vim.lsp.set_log_level 已弃用
+vim.lsp.log.set_level(vim.log.levels.OFF)
 
 -- 自定义 LSP 处理器，抑制 info 级别的日志消息
 vim.lsp.handlers["window/logMessage"] = function(err, method, params, client_id)
@@ -108,6 +108,76 @@ local function check_server_availability(cmd_list)
     return true
   end
   return false
+end
+
+local function get_global_node_modules()
+  local result = vim.fn.system("npm root -g")
+  if vim.v.shell_error ~= 0 then
+    return nil
+  end
+  local path = vim.trim(result or "")
+  if path == "" then
+    return nil
+  end
+  return path
+end
+
+local function path_exists(path)
+  return path and vim.fn.isdirectory(path) == 1
+end
+
+local function make_angularls_server()
+  local global_node_modules = get_global_node_modules()
+  local ngserver_cmd = { "ngserver", "--stdio" }
+  if not check_server_availability(ngserver_cmd) then
+    return nil
+  end
+
+  local global_probe_locations = {}
+  if global_node_modules then
+    table.insert(global_probe_locations, global_node_modules)
+  end
+
+  return {
+    name = "angularls",
+    config = {
+      capabilities = capabilities,
+      cmd = ngserver_cmd,
+      filetypes = { "typescript", "html", "typescriptreact", "typescript.tsx" },
+      root_markers = { "angular.json", "project.json", "nx.json" },
+      on_new_config = function(new_config, root_dir)
+        local ts_probe_locations = {}
+        local ng_probe_locations = {}
+        local project_node_modules = root_dir and (root_dir .. "/node_modules") or nil
+
+        if path_exists(project_node_modules) then
+          table.insert(ts_probe_locations, project_node_modules)
+          local project_angular_node_modules = project_node_modules .. "/@angular/language-server/node_modules"
+          if path_exists(project_angular_node_modules) then
+            table.insert(ng_probe_locations, project_angular_node_modules)
+          end
+        end
+
+        for _, p in ipairs(global_probe_locations) do
+          table.insert(ts_probe_locations, p)
+          local global_angular_node_modules = p .. "/@angular/language-server/node_modules"
+          if path_exists(global_angular_node_modules) then
+            table.insert(ng_probe_locations, global_angular_node_modules)
+          end
+        end
+
+        local cmd = { ngserver_cmd[1], ngserver_cmd[2] }
+        if #ts_probe_locations > 0 then
+          vim.list_extend(cmd, { "--tsProbeLocations", table.concat(ts_probe_locations, ",") })
+        end
+        if #ng_probe_locations > 0 then
+          vim.list_extend(cmd, { "--ngProbeLocations", table.concat(ng_probe_locations, ",") })
+        end
+        vim.list_extend(cmd, { "--angularCoreVersion", "" })
+        new_config.cmd = cmd
+      end,
+    },
+  }
 end
 
 -- 使用 vim.lsp.config (Neovim 0.11+) 配置 LSP 服务器，替代已废弃的 require('lspconfig')
@@ -266,6 +336,11 @@ local servers = {
     },
   },
 }
+
+local angular_server = make_angularls_server()
+if angular_server then
+  table.insert(servers, angular_server)
+end
 
 -- 启动 LSP 服务器（使用 vim.lsp.config + vim.lsp.enable）
 for _, server in ipairs(servers) do
