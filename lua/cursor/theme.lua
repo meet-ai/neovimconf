@@ -98,20 +98,6 @@ M.setup = function()
   end
 end
 
--- 切换主题模式
-M.toggle_theme = function()
-  local current_bg = vim.o.background
-  if current_bg == "dark" then
-    vim.cmd('set background=light')
-  else
-    vim.cmd('set background=dark')
-  end
-  
-  -- 重新加载主题
-  vim.cmd('colorscheme desert')
-  
-  -- 应用覆盖
-  M.setup()
-end
+-- 主题切换由 core/theme.lua 的 ThemeToggle 统一负责(删除此文件中的 M.toggle_theme)
 
 return M

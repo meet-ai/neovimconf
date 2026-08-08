@@ -1,11 +1,3 @@
---[[
-Author: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
-Date: 2025-04-11 19:55:01
-LastEditors: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
-LastEditTime: 2025-04-12 08:11:02
-FilePath: /nvim/lua/core/options.lua
-Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
---]]
 local opt = vim.opt
 
 -- GUI/非终端启动时继承登录 shell 的 PATH，使 opencode/npm 等可用

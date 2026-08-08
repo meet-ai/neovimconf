@@ -43,20 +43,4 @@ else
 end
 
 -- 加载Cursor风格插件 (现在通过lazy.nvim导入)
--- require("plugins.cursor")
 
--- 启用Cursor风格主题和快捷键
-vim.schedule(function()
-  -- 禁用 cursor 主题覆盖（只使用 spacemacs）
-  -- local ok, theme = pcall(require, "cursor.theme")
-  -- if ok then
-  --   theme.setup()
-  -- end
-  
-  -- local ok, keymaps = pcall(require, "cursor.keymaps")
-  -- if ok then
-  --   keymaps.setup()
-  -- end
-  
-  -- 静默模式：不显示欢迎信息
-end)

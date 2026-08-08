@@ -4,9 +4,6 @@ local str = require('render-markdown.lib.str')
 local log = require('render-markdown.core.log')
 local Context = require('render-markdown.request.context')
 
- local DEBUG = false
-local log = require('render-markdown.core.log')
-
 ---@class render.md.render.TableWrap: render.md.Render
 ---@field private config render.md.table.Config
 ---@field private data render.md.table.Data

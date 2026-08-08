@@ -1,20 +1,6 @@
---[[
-Author: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
-Date: 2025-04-11 19:55:01
-LastEditors: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
-LastEditTime: 2025-04-11 20:53:16
-FilePath: /nvim/lua/plugins/init.lua
-Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
---]]
 local lazy = require("lazy")
 
--- 主题配置 - 由 space-nvim 插件设置
--- vim.cmd.colorscheme("space")
-
 lazy.setup({
-  -- 本地 Spacemacs 主题 (替换 space-nvim 插件)
-  -- 主题配置在 lua/themes/spacemacs/init.lua 中实现
-
   -- Mason 插件管理器
   {
     "williamboman/mason.nvim",
