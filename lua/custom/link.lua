@@ -60,7 +60,8 @@ function CustomLink:setup()
             link_label_node = link_label
         end
         -- 从 destination 取最后一段作为显示名（文件名）
-        local display_text = link_text
+        -- 注意:不能加 local(会遮蔽外层 display_text,导致文件名预览恒失效)
+        display_text = link_text
         if destination and #destination > 0 then
             local filename = destination:match("([^/\\]+)$")
             if filename and #filename > 0 then
