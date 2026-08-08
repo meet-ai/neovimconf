@@ -34,6 +34,11 @@ for _, m in ipairs(core_mods) do
 end
 
 -- 2. 自定义模块可加载
+-- 注意: custom.markdown-handler/table-wrap 依赖 render-markdown 插件,且 render-markdown 的
+-- config 又会 require 它们(循环依赖)。先触发 render-markdown 加载,再 require handlers。
+pcall(function()
+  require("lazy").load({ plugins = { "render-markdown.nvim" } })
+end)
 local custom_mods = {
   "custom.open-in-cursor", "custom.fix-ts-directive",
   "custom.markdown-handler", "custom.markdown-inline-handler",
