@@ -1,4 +1,4 @@
--- AI 集成:opencode、copilot
+-- AI 集成:opencode、pi
 return {
   -- Opencode.nvim - opencode CLI plugin
   {
@@ -79,27 +79,6 @@ return {
       else
         vim.notify("Failed to load opencode module: " .. tostring(opencode), vim.log.levels.ERROR)
       end
-    end,
-  },
-
-  -- 自动补全增强 (需要 Node.js 22+)
-  {
-    "zbirenbaum/copilot.lua",
-    cmd = "Copilot",
-    event = "InsertEnter",
-    cond = function()
-      local handle = io.popen("node -v 2>/dev/null")
-      if not handle then return false end
-      local version = handle:read("*a"):gsub("%s+", "")
-      handle:close()
-      local major = tonumber((version:match("v?(%d+)")) or "0")
-      return major >= 22
-    end,
-    config = function()
-      require("copilot").setup({
-        suggestion = { enabled = false },
-        panel = { enabled = false },
-      })
     end,
   },
 

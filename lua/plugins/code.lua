@@ -22,6 +22,20 @@ return {
     end,
   },
 
+  -- 诊断/引用聚合面板（trouble：Problems 面板）
+  {
+    "folke/trouble.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    cmd = { "Trouble", "TroubleToggle" },
+    opts = {},
+    keys = {
+      { "<Leader>xx", "<cmd>Trouble diagnostics toggle<cr>", desc = "Diagnostics (Trouble)" },
+      { "<Leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", desc = "Buffer Diagnostics (Trouble)" },
+      { "<Leader>xq", "<cmd>Trouble qflist toggle<cr>", desc = "Quickfix List (Trouble)" },
+      { "<Leader>xl", "<cmd>Trouble loclist toggle<cr>", desc = "Location List (Trouble)" },
+    },
+  },
+
   -- 浮动终端
   {
     "akinsho/toggleterm.nvim",
@@ -37,13 +51,6 @@ return {
         },
       })
     end,
-  },
-
-  -- 增强注释
-  {
-    "numToStr/Comment.nvim",
-    opts = {},
-    lazy = false,
   },
 
   -- 代码注释便签（行级 annotation + 浮窗编辑）

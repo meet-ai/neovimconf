@@ -47,4 +47,17 @@ function M.telescope_builtin(func_name)
   end
 end
 
+---安全调用 fzf-lua（未安装时通知）
+---@param func_name string
+function M.fzf_lua(func_name)
+  return function()
+    local ok, fzf = pcall(require, "fzf-lua")
+    if ok and fzf[func_name] then
+      fzf[func_name]()
+    else
+      vim.notify("fzf-lua not available", vim.log.levels.WARN)
+    end
+  end
+end
+
 return M

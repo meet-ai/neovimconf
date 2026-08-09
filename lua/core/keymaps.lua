@@ -137,24 +137,6 @@ map("n", "#", "#", { desc = "Search word under cursor backward" })
  end, { desc = "Evaluate buffer" })
  map("n", "<Leader>cb", "<cmd>make<cr>", { desc = "Compile/build" })
  map("n", "<Leader>cr", "<cmd>ToggleTerm<cr>", { desc = "REPL" })
-   map("n", "<Leader>cp", function()
-     -- 首先检查命令是否存在
-     if vim.fn.exists(":TSPlaygroundToggle") == 2 then
-       vim.cmd("TSPlaygroundToggle")
-       return
-     end
-     
-     -- 尝试通过模块调用
-     local ok, playground = pcall(require, "nvim-treesitter-playground")
-     if ok and playground.toggle then
-       playground.toggle()
-       return
-     end
-     
-     -- 如果都失败，提供安装指导
-     vim.notify("Tree-sitter Playground 未安装", vim.log.levels.WARN)
-     vim.notify("请运行: Lazy install nvim-treesitter/nvim-treesitter-playground", vim.log.levels.INFO)
-   end, { desc = "Toggle tree-sitter playground" })
 
   -- ============================================================================
  -- Git操作 (SPC g)

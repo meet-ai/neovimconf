@@ -21,7 +21,7 @@ return {
     "williamboman/mason-lspconfig.nvim",
     config = function()
       require("mason-lspconfig").setup({
-        -- 仅填 mason-registry 里存在的 lspconfig 名；Metals 不在 Mason 中，Scala 用 lua/lsp/init.lua 手动 cmd
+        -- 仅填 mason-registry 里存在的 lspconfig 名
         ensure_installed = {
           "jdtls",
           "gopls",

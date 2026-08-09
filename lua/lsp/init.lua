@@ -51,7 +51,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
     -- 按语言启用保存时格式化
     local ft = vim.bo[bufnr].filetype
-    local format_fts = { ["go"] = true, ["java"] = true, ["kotlin"] = true, ["scala"] = true, ["sbt"] = true }
+    local format_fts = { ["go"] = true, ["java"] = true, ["kotlin"] = true }
     if format_fts[ft] then
       vim.api.nvim_create_autocmd("BufWritePre", {
         buffer = bufnr,
@@ -68,7 +68,6 @@ local servers = {}
 for _, client_mod in ipairs({
   "lsp.clients.gopls",
   "lsp.clients.jdtls",
-  "lsp.clients.metals",
   "lsp.clients.marksman",
 }) do
   local ok, client = pcall(require, client_mod)

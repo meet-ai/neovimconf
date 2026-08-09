@@ -8,8 +8,8 @@ vim.api.nvim_set_hl(0, "NormalFloat", { bg = "NONE" })
 -- 加载 desert 主题（内置 :h default-colors）
 local function load_theme()
   vim.o.background = "dark"
+  -- 注意:不要在启动时 vim.notify/echomsg,消息区未就绪会触发 "Press ENTER" 提示
   vim.cmd('colorscheme desert')
-  vim.notify("使用 desert 主题", vim.log.levels.INFO)
   return true
 end
 
