@@ -52,7 +52,7 @@ end
 -- 3. 关键用户命令存在
 local cmds = {
   "OpencodeToggleWin", "OpencodeStopWin", "CodeAnalyze", "CursorOpen",
-  "ThemeToggle", "Lazy", "Pi", "PiToggle", "PiDiff",
+  "ThemeToggle", "Lazy", "Pi", "PiToggle", "PiTermCopy",
 }
 for _, c in ipairs(cmds) do
   local exists = vim.fn.exists(":" .. c) == 2
@@ -62,8 +62,7 @@ end
 -- 5. 关键键位存在(<Leader> = ",")
 local keys = {
   { mode = "n", lhs = ",co", label = "<Leader>co opencode" },
-  { mode = "n", lhs = ",ai", label = "<Leader>ai pi.nvim toggle" },
-  { mode = "n", lhs = ",am", label = "<Leader>am pi.nvim cycle model" },
+  { mode = "n", lhs = ",ai", label = "<Leader>ai pi.neovim toggle" },
   { mode = "n", lhs = ",gc", label = "<Leader>gc open-in-cursor" },
   { mode = "n", lhs = "gd", label = "gd definition" },
   { mode = "n", lhs = "K", label = "K hover" },

@@ -86,19 +86,9 @@ return {
   {
     "AgenticTimes/pi.neovim",
     lazy = true,
-    cmd = { "Pi", "PiToggle", "PiChat", "PiNewSession", "PiCycleModel", "PiCycleThinking", "PiDiff", "PiTermCopy" },
+    cmd = { "Pi", "PiToggle", "PiTermCopy" },
     config = function()
-      require("pi").setup({})
-      -- 禁用 nvim-cmp 对 pi 输入区的干扰：否则 / 会被 cmp 的 path 源抢成文件夹提示
-      vim.api.nvim_create_autocmd("InsertEnter", {
-        pattern = "pi://input",
-        callback = function()
-          local ok, cmp = pcall(require, "cmp")
-          if ok and cmp.setup and cmp.setup.buffer then
-            cmp.setup.buffer({ enabled = false })
-          end
-        end,
-      })
+      require("pi").setup({ warm_start = true })
     end,
   },
 }
