@@ -1,4 +1,4 @@
--- AI 集成:opencode、copilot、cursor-agent
+-- AI 集成:opencode、copilot
 return {
   -- Opencode.nvim - opencode CLI plugin
   {
@@ -103,21 +103,23 @@ return {
     end,
   },
 
-  -- Cursor Agent CLI 集成（浮动终端内运行 cursor-agent）
-  -- 前置：cursor-agent 需在 $PATH；详见 doc/cursor-agent-nvim.md
+  -- pi.neovim - pi coding agent Neovim 前端（零依赖，stdio RPC）
   {
-    "xTacobaco/cursor-agent.nvim",
+    "AgenticTimes/pi.neovim",
     lazy = true,
-    cmd = { "CursorAgent", "CursorAgentSelection", "CursorAgentBuffer" },
+    cmd = { "Pi", "PiToggle", "PiChat", "PiNewSession", "PiCycleModel", "PiCycleThinking", "PiDiff", "PiTermCopy" },
     config = function()
-      require("cursor-agent").setup({
-        cmd = "cursor-agent",
-        args = {},
+      require("pi").setup({})
+      -- 禁用 nvim-cmp 对 pi 输入区的干扰：否则 / 会被 cmp 的 path 源抢成文件夹提示
+      vim.api.nvim_create_autocmd("InsertEnter", {
+        pattern = "pi://input",
+        callback = function()
+          local ok, cmp = pcall(require, "cmp")
+          if ok and cmp.setup and cmp.setup.buffer then
+            cmp.setup.buffer({ enabled = false })
+          end
+        end,
       })
-      -- 注意：normal 模式不用 <leader>ca（与 LSP code_action 冲突，见 lua/lsp/init.lua）；
-      -- 只用 visual 模式的选择发送 + <leader>cA 发送整个 buffer。
-      vim.keymap.set("v", "<leader>ca", ":CursorAgentSelection<CR>", { desc = "Cursor Agent: Send selection" })
-      vim.keymap.set("n", "<leader>cA", ":CursorAgentBuffer<CR>", { desc = "Cursor Agent: Send buffer" })
     end,
   },
 }

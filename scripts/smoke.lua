@@ -26,7 +26,7 @@ end
 -- 1. 核心模块可加载
 local core_mods = {
   "core.bootstrap", "core.env", "core.options", "core.keymaps", "core.theme",
-  "core.autosave", "core.readonly",
+  "core.autosave", "core.readonly", "pi",
 }
 for _, m in ipairs(core_mods) do
   local ok, err = module_ok(m)
@@ -49,14 +49,10 @@ for _, m in ipairs(custom_mods) do
   check("require " .. m, ok, err)
 end
 
--- 3. feature-nav 可加载
-local ok, err = module_ok("feature-nav.fzfnav")
-check("require feature-nav.fzfnav", ok, err)
-
--- 4. 关键用户命令存在
+-- 3. 关键用户命令存在
 local cmds = {
   "OpencodeToggleWin", "OpencodeStopWin", "CodeAnalyze", "CursorOpen",
-  "ThemeToggle", "Lazy",
+  "ThemeToggle", "Lazy", "Pi", "PiToggle", "PiDiff",
 }
 for _, c in ipairs(cmds) do
   local exists = vim.fn.exists(":" .. c) == 2
@@ -66,8 +62,8 @@ end
 -- 5. 关键键位存在(<Leader> = ",")
 local keys = {
   { mode = "n", lhs = ",co", label = "<Leader>co opencode" },
-  { mode = "n", lhs = ",sl", label = "<Leader>sl fzfnav" },
-  { mode = "n", lhs = ",sq", label = "<Leader>sq fzfnav search" },
+  { mode = "n", lhs = ",ai", label = "<Leader>ai pi.nvim toggle" },
+  { mode = "n", lhs = ",am", label = "<Leader>am pi.nvim cycle model" },
   { mode = "n", lhs = ",gc", label = "<Leader>gc open-in-cursor" },
   { mode = "n", lhs = "gd", label = "gd definition" },
   { mode = "n", lhs = "K", label = "K hover" },

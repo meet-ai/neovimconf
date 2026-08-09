@@ -9,10 +9,13 @@
 
 local map = require("core.keymaps.util").map
 local safe_cmd = require("core.keymaps.util").safe_cmd
-local telescope_builtin = require("core.keymaps.util").telescope_builtin
+local fzf_lua = require("core.keymaps.util").fzf_lua
 
 -- opencode 终端子系统（浮窗 toggle / t 模式转义 / 选区提取 / @file）
 require("core.keymaps.opencode")
+
+-- pi.nvim（pi coding agent 前端浮窗 / 模型 / 思考级别）
+require("core.keymaps.pi")
 
 -- ============================================================================
 -- Doom Emacs风格快捷键 (SPC为Leader)
@@ -20,23 +23,27 @@ require("core.keymaps.opencode")
 
 -- 通用快捷键
 map("n", "<Leader>:", "<cmd>lua vim.ui.input({prompt=':'}, function(cmd) if cmd then vim.cmd(cmd) end end)<cr>", { desc = "Execute command (M-x)" })
-map("n", "<Leader>.", telescope_builtin("find_files"), { desc = "Find file" })
+map("n", "<Leader>.", fzf_lua("files"), { desc = "Find file" })
 map("n", "<Leader>?", function()
-  local ok, which_key = pcall(require, "which-key")
-  if ok then
-    which_key.show("", { mode = "n" })
+  -- 优先打开 legendary 全量快捷键面板；未安装/未加载时回退到 which-key 列表
+  local ok = pcall(vim.cmd, "Legendary")
+  if not ok then
+    local wk_ok, which_key = pcall(require, "which-key")
+    if wk_ok then
+      which_key.show("", { mode = "n" })
+    end
   end
-end, { desc = "Search keybindings (which-key)" })
+end, { desc = "Search all keybindings (legendary)" })
 map("n", "<Leader>qq", "<cmd>qa<cr>", { desc = "Quit (confirm)" })
 map("n", "<Leader>qQ", "<cmd>qa!<cr>", { desc = "Force quit" })
 
 -- ============================================================================
 -- 文件操作 (SPC f)
 -- ============================================================================
-map("n", "<Leader>pf", telescope_builtin("find_files"), { desc = "Find file" })
-map("n", "<Leader>f/", telescope_builtin("find_files"), { desc = "Find file in project" })
-map("n", "<Leader>fr", telescope_builtin("oldfiles"), { desc = "Recent files" })
-map("n", "<Leader>fd", telescope_builtin("find_files"), { desc = "Find directory" })
+map("n", "<Leader>pf", fzf_lua("files"), { desc = "Find file" })
+map("n", "<Leader>f/", fzf_lua("files"), { desc = "Find file in project" })
+map("n", "<Leader>fr", fzf_lua("oldfiles"), { desc = "Recent files" })
+map("n", "<Leader>fd", fzf_lua("files"), { desc = "Find directory" })
 map("n", "<Leader>fs", "<cmd>w<cr>", { desc = "Save current file" })
 map("n", "<Leader>fS", "<cmd>wa<cr>", { desc = "Save all files" })
 map("n", "<Leader>fy", function()
@@ -53,27 +60,10 @@ map("n", "<Leader>fR", function()
   end)
 end, { desc = "Rename file" })
 
--- FeatureNav / fzfnav（归类到搜索分组 SPC s）
-map("n", "<Leader>sl", function()
-  local ok, err = pcall(function()
-    require("feature-nav.fzfnav").show()
-  end)
-  if not ok then
-    vim.notify("feature-nav.fzfnav: " .. tostring(err), vim.log.levels.ERROR)
-  end
-end, { desc = "Label 导航浮窗 (fzfnav)" })
-map("n", "<Leader>sq", function()
-  vim.ui.input({ prompt = "Label 搜索: " }, function(query)
-    if query and query ~= "" then
-      pcall(require("feature-nav.fzfnav").search, query)
-    end
-  end)
-end, { desc = "Label 语义搜索 (fzfnav)" })
-
 -- ============================================================================
 -- 缓冲区操作 (SPC b)
 -- ============================================================================
-map("n", "<Leader>bb", telescope_builtin("buffers"), { desc = "Switch buffer" })
+map("n", "<Leader>bb", fzf_lua("buffers"), { desc = "Switch buffer" })
 map("n", "<Leader>bp", "<cmd>bprevious<cr>", { desc = "Previous buffer" })
 map("n", "<Leader>bn", "<cmd>bnext<cr>", { desc = "Next buffer" })
 map("n", "<Leader>bk", "<cmd>bdelete<cr>", { desc = "Close buffer" })
@@ -103,10 +93,10 @@ map("n", "<Leader>wm", "<C-w>_<C-w>|", { desc = "Maximize window" })
 -- ============================================================================
 -- 项目操作 (SPC p)
 -- ============================================================================
-map("n", "<Leader>pp", telescope_builtin("find_files"), { desc = "Switch project" })
+map("n", "<Leader>pp", fzf_lua("files"), { desc = "Switch project" })
 map("n", "<Leader>pt", function() safe_cmd("NvimTreeToggle") end, { desc = "Project file tree" })
-map("n", "<Leader>pr", telescope_builtin("oldfiles"), { desc = "Project recent files" })
-map("n", "<Leader>p/", telescope_builtin("live_grep"), { desc = "Search in project" })
+map("n", "<Leader>pr", fzf_lua("oldfiles"), { desc = "Project recent files" })
+map("n", "<Leader>p/", fzf_lua("grep"), { desc = "Search in project" })
 map("n", "<Leader>ot", "<cmd>ToggleTerm<cr>", { desc = "Project terminal" })
 
 map("n", "<Leader><Tab>", "<cmd>bprevious<cr>", { desc = "Switch to last buffer" })
@@ -114,17 +104,17 @@ map("n", "<Leader><Tab>", "<cmd>bprevious<cr>", { desc = "Switch to last buffer"
 -- ============================================================================
 -- 搜索 (SPC s) - 参考 SpaceEmacs / Doom Emacs 分组
 -- ============================================================================
-map("n", "<Leader>ss", telescope_builtin("live_grep"), { desc = "Search in project" })
-map("n", "<Leader>sS", telescope_builtin("live_grep"), { desc = "Search in another project" })
-map("n", "<Leader>sf", telescope_builtin("find_files"), { desc = "Find files" })
-map("n", "<Leader>sd", telescope_builtin("live_grep"), { desc = "Search in directory" })
-map("n", "<Leader>sD", telescope_builtin("live_grep"), { desc = "Search in selected directory" })
-map("n", "<Leader>sb", telescope_builtin("current_buffer_fuzzy_find"), { desc = "Search in current buffer" })
-map("n", "<Leader>sh", telescope_builtin("help_tags"), { desc = "Search help tags" })
-map("n", "<Leader>sr", telescope_builtin("resume"), { desc = "Resume last search" })
-map("n", "<Leader>si", telescope_builtin("lsp_document_symbols"), { desc = "Symbols in current file" })
-map("n", "<Leader>sI", telescope_builtin("lsp_workspace_symbols"), { desc = "Symbols in all buffers" })
-map("n", "<Leader>sw", telescope_builtin("grep_string"), { desc = "Search word under cursor" })
+map("n", "<Leader>ss", fzf_lua("grep"), { desc = "Search in project" })
+map("n", "<Leader>sS", fzf_lua("grep"), { desc = "Search in another project" })
+map("n", "<Leader>sf", fzf_lua("files"), { desc = "Find files" })
+map("n", "<Leader>sd", fzf_lua("grep"), { desc = "Search in directory" })
+map("n", "<Leader>sD", fzf_lua("grep"), { desc = "Search in selected directory" })
+map("n", "<Leader>sb", fzf_lua("blines"), { desc = "Search in current buffer" })
+map("n", "<Leader>sh", fzf_lua("help_tags"), { desc = "Search help tags" })
+map("n", "<Leader>sr", fzf_lua("resume"), { desc = "Resume last search" })
+map("n", "<Leader>si", fzf_lua("lsp_document_symbols"), { desc = "Symbols in current file" })
+map("n", "<Leader>sI", fzf_lua("lsp_workspace_symbols"), { desc = "Symbols in all buffers" })
+map("n", "<Leader>sw", fzf_lua("grep_cword"), { desc = "Search word under cursor" })
 -- Evil风格高亮搜索
 map("n", "*", "*", { desc = "Search word under cursor forward" })
 map("n", "#", "#", { desc = "Search word under cursor backward" })
